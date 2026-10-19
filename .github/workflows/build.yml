@@ -34,6 +34,7 @@ jobs:
 
   linux:
     strategy:
+      fail-fast: false          # a failure on one architecture shouldn't hide the other's result
       matrix:
         include:
           - { arch: amd64, runner: ubuntu-22.04 }

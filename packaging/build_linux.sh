@@ -44,7 +44,7 @@ Priority: optional
 Architecture: $ARCH
 Maintainer: Bloom <bloom@localhost>
 Installed-Size: $(du -sk "$PKG" | cut -f1)
-Depends: ffmpeg, libxcb-cursor0, libxkbcommon-x11-0, libegl1, libgl1, libfontconfig1, libdbus-1-3, libglib2.0-0t64 | libglib2.0-0, xdg-user-dirs
+Depends: ffmpeg, xdg-user-dirs, libx11-6, libx11-xcb1, libxcb1, libxcb-cursor0, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, libxcb-randr0, libxcb-render0, libxcb-render-util0, libxcb-shape0, libxcb-shm0, libxcb-sync1, libxcb-util1, libxcb-xfixes0, libxcb-xkb1, libxcb-glx0, libxkbcommon0, libxkbcommon-x11-0, libegl1, libgl1, libfontconfig1, libfreetype6, libdbus-1-3, libglib2.0-0t64 | libglib2.0-0, libpng16-16t64 | libpng16-16, libssl3t64 | libssl3
 Recommends: libreoffice-core
 Description: Offline file converter with a petal wheel
  Start dragging any file, then press Shift to convert, Ctrl for tools or
