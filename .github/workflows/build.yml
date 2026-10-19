@@ -1,6 +1,6 @@
 # Builds the Bloom installers on GitHub's machines:
 #   Windows  dist/Bloom-Setup.exe
-#   Linux    dist/bloom_<version>_amd64.deb  (built on Ubuntu 22.04, so it runs on 22.04 and newer)
+#   Linux    dist/bloom_<version>_amd64.deb and _arm64.deb  (built on Ubuntu 22.04, so they run on 22.04 and newer)
 # Run it from Actions -> Build -> Run workflow and download the files from the run's Artifacts.
 # Pushing a tag like v0.2.0 also publishes both files as a GitHub Release.
 name: Build
@@ -33,7 +33,12 @@ jobs:
           path: dist/Bloom-Setup.exe
 
   linux:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-22.04 }
+          - { arch: arm64, runner: ubuntu-22.04-arm }
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -41,9 +46,17 @@ jobs:
           python-version: "3.12"
       - name: Build
         run: ./packaging/build_linux.sh
+      - name: Install the .deb and launch Bloom
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb ./dist/bloom_*_${{ matrix.arch }}.deb
+          export HOME=$(mktemp -d)
+          status=0
+          xvfb-run -a timeout 10 bloom || status=$?
+          test "$status" = 124      # still running after 10 s means it started fine
       - uses: actions/upload-artifact@v4
         with:
-          name: Bloom-Linux
+          name: Bloom-Linux-${{ matrix.arch }}
           path: dist/*.deb
 
   release:
@@ -57,7 +70,9 @@ jobs:
         with:
           merge-multiple: true
       # A fixed name too, so the website can always link to .../releases/latest/download/bloom_amd64.deb
-      - run: cp bloom_*_amd64.deb bloom_amd64.deb
+      - run: |
+          cp bloom_*_amd64.deb bloom_amd64.deb
+          cp bloom_*_arm64.deb bloom_arm64.deb
       - uses: softprops/action-gh-release@v2
         with:
           files: |
