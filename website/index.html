@@ -465,8 +465,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
             <li>Find the Bloom flower in the tray, then Shift-drag any file.</li>
           </ol>
           <div class="term">
-            <div class="bar"><span>Or install from a terminal</span><button class="copy" id="copyBtn" type="button">Copy</button></div>
-            <pre id="cmd"><span class="p">$</span> sudo apt install ./Downloads/bloom_amd64.deb</pre>
+            <div class="bar"><span>Or download and install from a terminal</span><button class="copy" id="copyBtn" type="button">Copy</button></div>
+            <pre id="cmd"><span class="p">$</span> wget -O /tmp/bloom.deb https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb
+<span class="p">$</span> sudo apt install /tmp/bloom.deb</pre>
           </div>
           <p class="req">Ubuntu, Debian and Mint, 64-bit, in an X11 (Xorg) session. ffmpeg is installed with it. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Wayland the key wheels can't see drags.</p>
         </div>
@@ -899,7 +900,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
   /* ---------------- copy install command ---------------- */
   const copyBtn = document.getElementById('copyBtn');
   copyBtn.addEventListener('click', () => {
-    const text = 'sudo apt install ./Downloads/bloom_amd64.deb';
+    const text = 'wget -O /tmp/bloom.deb https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb && sudo apt install /tmp/bloom.deb';
     const done = () => { copyBtn.textContent = 'Copied'; setTimeout(() => copyBtn.textContent = 'Copy', 1600); };
     const fallback = () => { const r = document.createRange(); r.selectNodeContents(document.getElementById('cmd')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); copyBtn.textContent = 'Selected · press Ctrl+C'; };
     try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
