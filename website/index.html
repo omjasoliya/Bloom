@@ -282,6 +282,13 @@ header.site .wrap { display: flex; align-items: center; gap: 24px; padding-block
 .dl { justify-self: start; padding: .75em 1.4em; font-size: 1rem; }
 .dl .ico { width: 19px; height: 19px; }
 .dl small { font-weight: 500; opacity: .75; font-size: .8rem; margin-left: 4px; }
+.detect { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); border-radius: 14px; padding: 10px 14px; font-size: .92rem; line-height: 1.45; }
+.detect[hidden] { display: none; }
+.detect .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+.detect span:nth-child(2) { flex: 1 1 200px; }
+.detect.warn { border-color: var(--line); background: var(--soft); }
+.detect.warn .dot { background: var(--muted); box-shadow: none; }
+.linkbtn { font: inherit; font-weight: 700; font-size: .85rem; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
 .dlrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .dl.alt { background: var(--soft); color: var(--ink); }
 .dl.alt:hover { background: color-mix(in srgb, var(--accent) 14%, var(--soft)); }
@@ -315,7 +322,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       <a href="#formats">Formats</a>
       <a href="#privacy">Privacy</a>
     </nav>
-    <a class="btn" href="#get">Get Bloom</a>
+    <a class="btn" href="#get" id="headGet">Get Bloom</a>
   </div>
 </header>
 
@@ -447,12 +454,13 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           <li><svg class="ico" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Shift, Ctrl and Alt wheels, plus a right-click menu on Windows</li>
           <li><svg class="ico" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Everything processed locally, without uploads</li>
         </ul>
+        <div class="detect" id="detect" role="status" hidden><span class="dot"></span><span id="detectText"></span><button type="button" class="linkbtn" id="shareBtn" hidden>Copy link</button></div>
         <div class="os-switch" role="tablist" aria-label="Your system">
           <button type="button" role="tab" class="os" data-os="windows" aria-selected="true">Windows</button>
           <button type="button" role="tab" class="os" data-os="linux" aria-selected="false">Linux</button>
         </div>
         <div class="ospane" data-pane="windows" role="tabpanel">
-          <a class="btn dl" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Windows<small>.exe · 56 MB</small></a>
+          <a class="btn dl" id="dlWin" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Windows<small>.exe · 56 MB</small></a>
           <ol class="steps">
             <li>Run <span class="mono">Bloom-Setup.exe</span>. It installs for your user only, no admin rights needed. If Windows warns about an unknown app, choose <b>More info → Run anyway</b>.</li>
             <li>Keep <b>Start when I log in</b> and <b>Open in Bloom</b> ticked.</li>
@@ -461,9 +469,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           <p class="req">Windows 10 and 11, 64-bit. ffmpeg comes built in. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Windows 11, Open in Bloom sits under Show more options.</p>
         </div>
         <div class="ospane" data-pane="linux" role="tabpanel" hidden>
-          <div class="dlrow">
-            <a class="btn dl" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Linux<small>Intel / AMD · 45 MB</small></a>
-            <a class="btn dl alt" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_arm64.deb">ARM64<small>41 MB</small></a>
+          <div class="dlrow" id="linuxRow">
+            <a class="btn dl" id="dlX64" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Linux<small>Intel / AMD · 45 MB</small></a>
+            <a class="btn dl alt" id="dlArm" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_arm64.deb">ARM64<small>41 MB</small></a>
           </div>
           <ol class="steps">
             <li>Double-click the downloaded file and choose <b>Install</b>, or run the command below.</li>
@@ -902,6 +910,80 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
   };
   osBtns.forEach(b => b.addEventListener('click', () => showOS(b.dataset.os)));
   showOS(/Linux|X11/i.test(navigator.userAgent) && !/Android/i.test(navigator.userAgent) ? 'linux' : 'windows');
+
+  /* ---------------- recommend the right download for this computer ---------------- */
+  // Chromium's user agent always says "Linux x86_64", so ask for the real CPU
+  // architecture where the browser offers it (Client Hints), and fall back to the UA.
+  async function detectSystem() {
+    const ua = navigator.userAgent, uad = navigator.userAgentData;
+    const plat = (uad && uad.platform) || navigator.platform || '';
+    let os = 'unknown';
+    if ((uad && uad.mobile) || /Android|iPhone|iPad|iPod/i.test(ua)) os = 'mobile';
+    else if (/Win/i.test(plat) || /Windows/i.test(ua)) os = 'windows';
+    else if (/CrOS/i.test(ua) || /Chrome OS/i.test(plat)) os = 'chromeos';
+    else if (/Mac/i.test(plat) || /Macintosh/i.test(ua)) os = navigator.maxTouchPoints > 1 ? 'mobile' : 'mac';   // iPadOS says Mac
+    else if (/Linux|X11/i.test(plat + ua)) os = 'linux';
+    let arch = null;
+    try {
+      if (uad && uad.getHighEntropyValues) {
+        const h = await uad.getHighEntropyValues(['architecture', 'bitness']);
+        if (h.architecture === 'arm') arch = h.bitness === '32' ? 'arm32' : 'arm64';
+        else if (h.architecture === 'x86') arch = h.bitness === '32' ? 'x86' : 'x64';
+      }
+    } catch (e) { /* not offered: use the user agent */ }
+    if (!arch) {
+      if (/aarch64|arm64/i.test(ua)) arch = 'arm64';
+      else if (/armv[67]/i.test(ua)) arch = 'arm32';
+      else if (/x86_64|x64|Win64|WOW64|amd64/i.test(ua)) arch = 'x64';
+    }
+    return { os, arch };
+  }
+
+  (async () => {
+    const { os, arch } = await detectSystem();
+    const box = document.getElementById('detect'), text = document.getElementById('detectText');
+    const say = (html, warn) => { text.innerHTML = html; box.classList.toggle('warn', !!warn); box.hidden = false; };
+    const head = document.getElementById('headGet');
+    const DL = '<svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+
+    if (os === 'windows') {
+      showOS('windows');
+      head.textContent = 'Get Bloom for Windows';
+      say(arch === 'arm64'
+        ? 'You’re on <b>Windows on ARM</b>. Bloom runs there through Windows 11’s built-in x64 emulation.'
+        : 'You’re on <b>Windows</b>. This is the right download for you.');
+    } else if (os === 'linux') {
+      showOS('linux');
+      head.textContent = 'Get Bloom for Linux';
+      if (arch === 'arm64') {
+        const row = document.getElementById('linuxRow'), a = document.getElementById('dlArm'), x = document.getElementById('dlX64');
+        a.classList.remove('alt'); x.classList.add('alt');
+        a.innerHTML = DL + 'Download for Linux<small>ARM64 · 41 MB</small>';
+        x.innerHTML = 'Intel / AMD<small>45 MB</small>';
+        row.prepend(a);
+        say('You’re on <b>Linux, ARM64</b>. The ARM64 download is the right one for you.');
+      } else if (arch === 'arm32') {
+        say('You’re on <b>32-bit ARM Linux</b>. Bloom needs a 64-bit system, such as 64-bit Raspberry Pi OS.', true);
+      } else {
+        say('You’re on <b>Linux' + (arch === 'x64' ? ', Intel/AMD' : '') + '</b>. This is the right download for you.');
+      }
+    } else if (os === 'mac') {
+      say('Bloom isn’t available for <b>Mac</b> yet. It runs on Windows and Linux.', true);
+    } else if (os === 'chromeos') {
+      say('Bloom isn’t available for <b>Chromebooks</b> yet. It runs on Windows and Linux.', true);
+    } else if (os === 'mobile') {
+      say('Bloom is a desktop app for <b>Windows and Linux</b>. Open this page on your computer to download it.', true);
+      const share = document.getElementById('shareBtn');
+      share.hidden = false;
+      share.addEventListener('click', async () => {
+        try {
+          if (navigator.share) await navigator.share({ title: 'Bloom', url: location.href.split('#')[0] });
+          else { await navigator.clipboard.writeText(location.href.split('#')[0]); share.textContent = 'Link copied'; }
+        } catch (e) { /* share sheet closed */ }
+      });
+      if (navigator.share) share.textContent = 'Send link to my computer';
+    }
+  })();
 
   /* ---------------- copy install command ---------------- */
   const copyBtn = document.getElementById('copyBtn');
