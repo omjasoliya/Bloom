@@ -322,7 +322,7 @@ header.site .wrap { display: flex; align-items: center; gap: 24px; padding-block
 .pl-steps .n { grid-row: span 2; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 4px; background: var(--soft); font-weight: 700; font-size: .8rem; transition: background .15s, color .15s; }
 .pl-steps b { font-size: .95rem; }
 .pl-steps small { color: var(--muted); font-size: .85rem; line-height: 1.45; }
-.pl-steps button.done .n { background: color-mix(in srgb, var(--accent) 22%, var(--soft)); }
+.pl-steps button.is-done .n { background: color-mix(in srgb, var(--accent) 22%, var(--soft)); }
 .pl-steps button[aria-current="step"] { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
 .pl-steps button[aria-current="step"] .n { background: var(--accent); color: var(--accent-ink); }
 
@@ -1209,7 +1209,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       if (st.pop) screen.classList.add('pop');
       stepsEl.querySelectorAll('button').forEach((b, k2) => {
         if (k2 === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
-        b.classList.toggle('done', k2 < i);
+        b.classList.toggle('is-done', k2 < i);
       });
       label.textContent = `Step ${i + 1} of ${flow.length}`;
       paint();
