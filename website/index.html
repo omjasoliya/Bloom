@@ -275,24 +275,33 @@ header.site .wrap { display: flex; align-items: center; gap: 24px; padding-block
 .platforms { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .plat { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: .9rem; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: .32em .95em; }
 .plat .ico { width: 17px; height: 17px; color: var(--accent); }
-.os-switch { display: inline-flex; justify-self: start; background: var(--soft); border-radius: 12px; padding: 4px; gap: 4px; }
-.os { font: inherit; font-weight: 700; font-size: .9rem; border: 0; border-radius: 9px; padding: .42em 1.1em; background: transparent; color: var(--muted); cursor: pointer; transition: background .15s, color .15s; }
-.os[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 4px 12px -8px rgba(20, 32, 25, .5); }
 .ospane { display: grid; gap: 12px; animation: rise .35s ease both; }
-.dl { justify-self: start; padding: .75em 1.4em; font-size: 1rem; }
 .dl .ico { width: 19px; height: 19px; }
-.dl small { font-weight: 500; opacity: .75; font-size: .8rem; margin-left: 4px; }
-.detect { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); border-radius: 14px; padding: 10px 14px; font-size: .92rem; line-height: 1.45; }
+.picker { display: grid; gap: 8px; }
+.opt { font: inherit; color: inherit; text-align: left; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto 18px; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s; }
+.opt:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.opt[aria-checked="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
+.opt::after { content: ""; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--line); transition: border .15s; }
+.opt[aria-checked="true"]::after { border: 5.5px solid var(--accent); }
+.opt-ico { width: 40px; height: 40px; border-radius: 11px; background: var(--soft); color: var(--ink); display: grid; place-items: center; transition: background .15s, color .15s; }
+.opt-ico svg { width: 20px; height: 20px; }
+.opt[aria-checked="true"] .opt-ico { background: var(--accent); color: var(--accent-ink); }
+.opt-txt { display: grid; gap: 1px; min-width: 0; }
+.opt-txt b { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .98rem; }
+.opt-txt small { color: var(--muted); font-size: .82rem; }
+.chip { font-size: .66rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: 999px; padding: 2px 8px; }
+.chip[hidden] { display: none; }
+.opt-size { font-family: var(--mono); font-size: .76rem; color: var(--muted); white-space: nowrap; }
+.dl { justify-content: center; width: 100%; padding: .85em 1.4em; border-radius: 14px; font-size: 1.02rem; }
+.dl small { font-weight: 500; opacity: .78; font-size: .82rem; margin-left: 2px; white-space: nowrap; }
+#dlTitle { white-space: nowrap; }
+@media (max-width: 480px) { .dl small { display: none; } }
+.detect { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; border: 1px solid var(--line); background: var(--soft); border-radius: 14px; padding: 10px 14px; font-size: .9rem; line-height: 1.45; }
 .detect[hidden] { display: none; }
-.detect .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+.detect .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .detect span:nth-child(2) { flex: 1 1 200px; }
-.detect.warn { border-color: var(--line); background: var(--soft); }
-.detect.warn .dot { background: var(--muted); box-shadow: none; }
 .linkbtn { font: inherit; font-weight: 700; font-size: .85rem; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
-.dlrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.dl.alt { background: var(--soft); color: var(--ink); }
-.dl.alt:hover { background: color-mix(in srgb, var(--accent) 14%, var(--soft)); }
-.dl[aria-disabled="true"] { background: var(--soft); color: var(--muted); cursor: default; transform: none; }
 .steps { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; }
 .steps li::marker { color: var(--accent); font-weight: 700; }
 .preview-tag { justify-self: start; font-family: var(--mono); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px; padding: 3px 12px; }
@@ -455,12 +464,25 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           <li><svg class="ico" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Everything processed locally, without uploads</li>
         </ul>
         <div class="detect" id="detect" role="status" hidden><span class="dot"></span><span id="detectText"></span><button type="button" class="linkbtn" id="shareBtn" hidden>Copy link</button></div>
-        <div class="os-switch" role="tablist" aria-label="Your system">
-          <button type="button" role="tab" class="os" data-os="windows" aria-selected="true">Windows</button>
-          <button type="button" role="tab" class="os" data-os="linux" aria-selected="false">Linux</button>
+        <div class="picker" role="radiogroup" aria-label="Choose your system">
+          <button type="button" role="radio" class="opt" data-pick="win" aria-checked="true" tabindex="0">
+            <span class="opt-ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.6l7.4-1v7H3zM11.6 4.4L21 3v8.6h-9.4zM3 12.6h7.4v7L3 18.5zM11.6 12.6H21V21l-9.4-1.3z"/></svg></span>
+            <span class="opt-txt"><b>Windows<span class="chip" hidden>Your system</span></b><small>10 &amp; 11 · 64-bit</small></span>
+            <span class="opt-size">56 MB</span>
+          </button>
+          <button type="button" role="radio" class="opt" data-pick="x64" aria-checked="false" tabindex="-1">
+            <span class="opt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-5-6-5M12 19h8"/></svg></span>
+            <span class="opt-txt"><b>Linux<span class="chip" hidden>Your system</span></b><small>Intel / AMD · x86_64</small></span>
+            <span class="opt-size">45 MB</span>
+          </button>
+          <button type="button" role="radio" class="opt" data-pick="arm" aria-checked="false" tabindex="-1">
+            <span class="opt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/></svg></span>
+            <span class="opt-txt"><b>Linux ARM64<span class="chip" hidden>Your system</span></b><small>Raspberry Pi and ARM PCs · aarch64</small></span>
+            <span class="opt-size">41 MB</span>
+          </button>
         </div>
+        <a class="btn dl" id="dlMain" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span id="dlTitle">Download for Windows</span><small id="dlSub">.exe · 56 MB</small></a>
         <div class="ospane" data-pane="windows" role="tabpanel">
-          <a class="btn dl" id="dlWin" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Windows<small>.exe · 56 MB</small></a>
           <ol class="steps">
             <li>Run <span class="mono">Bloom-Setup.exe</span>. It installs for your user only, no admin rights needed. If Windows warns about an unknown app, choose <b>More info → Run anyway</b>.</li>
             <li>Keep <b>Start when I log in</b> and <b>Open in Bloom</b> ticked.</li>
@@ -469,17 +491,13 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           <p class="req">Windows 10 and 11, 64-bit. ffmpeg comes built in. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Windows 11, Open in Bloom sits under Show more options.</p>
         </div>
         <div class="ospane" data-pane="linux" role="tabpanel" hidden>
-          <div class="dlrow" id="linuxRow">
-            <a class="btn dl" id="dlX64" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Linux<small>Intel / AMD · 45 MB</small></a>
-            <a class="btn dl alt" id="dlArm" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_arm64.deb">ARM64<small>41 MB</small></a>
-          </div>
           <ol class="steps">
             <li>Double-click the downloaded file and choose <b>Install</b>, or run the command below.</li>
             <li>Open <b>Bloom</b> from your apps. It starts by itself every time you log in.</li>
             <li>Find the Bloom flower in the tray, then Shift-drag any file.</li>
           </ol>
           <div class="term">
-            <div class="bar"><span>Or install from a terminal (picks Intel/AMD or ARM for you)</span><button class="copy" id="copyBtn" type="button">Copy</button></div>
+            <div class="bar"><span>Or from a terminal (picks Intel/AMD or ARM for you)</span><button class="copy" id="copyBtn" type="button">Copy</button></div>
             <pre id="cmd"><span class="p">$</span> wget -O /tmp/bloom.deb https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_$(dpkg --print-architecture).deb
 <span class="p">$</span> sudo apt install /tmp/bloom.deb</pre>
           </div>
@@ -902,14 +920,29 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       <div class="fn">${c.note}</div>
     </div>`).join('');
 
-  /* ---------------- Windows / Linux switch ---------------- */
-  const osBtns = [...document.querySelectorAll('.os')];
-  const showOS = os => {
-    osBtns.forEach(b => b.setAttribute('aria-selected', b.dataset.os === os));
-    document.querySelectorAll('.ospane').forEach(p => p.hidden = p.dataset.pane !== os);
+  /* ---------------- choose your system ---------------- */
+  const DOWNLOADS = {
+    win: { pane: 'windows', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe', title: 'Download for Windows', sub: '.exe · 56 MB' },
+    x64: { pane: 'linux', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb', title: 'Download for Linux', sub: 'Intel / AMD · 45 MB' },
+    arm: { pane: 'linux', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_arm64.deb', title: 'Download for Linux', sub: 'ARM64 · 41 MB' },
   };
-  osBtns.forEach(b => b.addEventListener('click', () => showOS(b.dataset.os)));
-  showOS(/Linux|X11/i.test(navigator.userAgent) && !/Android/i.test(navigator.userAgent) ? 'linux' : 'windows');
+  const opts = [...document.querySelectorAll('.opt')];
+  const pick = (key, focus) => {
+    const d = DOWNLOADS[key];
+    opts.forEach(o => { const on = o.dataset.pick === key; o.setAttribute('aria-checked', on); o.tabIndex = on ? 0 : -1; if (on && focus) o.focus(); });
+    document.getElementById('dlMain').href = d.href;
+    document.getElementById('dlTitle').textContent = d.title;
+    document.getElementById('dlSub').textContent = d.sub;
+    document.querySelectorAll('.ospane').forEach(p => p.hidden = p.dataset.pane !== d.pane);
+  };
+  opts.forEach((o, i) => {
+    o.addEventListener('click', () => pick(o.dataset.pick));
+    o.addEventListener('keydown', e => {                   // arrow keys move through a radio group
+      const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+      if (step) { e.preventDefault(); pick(opts[(i + step + opts.length) % opts.length].dataset.pick, true); }
+    });
+  });
+  pick(/Linux|X11/i.test(navigator.userAgent) && !/Android/i.test(navigator.userAgent) ? 'x64' : 'win');
 
   /* ---------------- recommend the right download for this computer ---------------- */
   // Chromium's user agent always says "Linux x86_64", so ask for the real CPU
@@ -942,48 +975,39 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
   (async () => {
     const { os, arch } = await detectSystem();
     const box = document.getElementById('detect'), text = document.getElementById('detectText');
-    const say = (html, warn) => { text.innerHTML = html; box.classList.toggle('warn', !!warn); box.hidden = false; };
+    const say = html => { text.innerHTML = html; box.hidden = false; };
+    const mine = key => { pick(key); document.querySelector(`.opt[data-pick="${key}"] .chip`).hidden = false; };
     const head = document.getElementById('headGet');
-    const DL = '<svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
 
     if (os === 'windows') {
-      showOS('windows');
+      mine('win');
       head.textContent = 'Get Bloom for Windows';
-      say(arch === 'arm64'
-        ? 'You’re on <b>Windows on ARM</b>. Bloom runs there through Windows 11’s built-in x64 emulation.'
-        : 'You’re on <b>Windows</b>. This is the right download for you.');
+      if (arch === 'arm64') say('You’re on <b>Windows on ARM</b>. Bloom runs there through Windows 11’s built-in x64 emulation.');
     } else if (os === 'linux') {
-      showOS('linux');
       head.textContent = 'Get Bloom for Linux';
-      if (arch === 'arm64') {
-        const row = document.getElementById('linuxRow'), a = document.getElementById('dlArm'), x = document.getElementById('dlX64');
-        a.classList.remove('alt'); x.classList.add('alt');
-        a.innerHTML = DL + 'Download for Linux<small>ARM64 · 41 MB</small>';
-        x.innerHTML = 'Intel / AMD<small>45 MB</small>';
-        row.prepend(a);
-        say('You’re on <b>Linux, ARM64</b>. The ARM64 download is the right one for you.');
-      } else if (arch === 'arm32') {
-        say('You’re on <b>32-bit ARM Linux</b>. Bloom needs a 64-bit system, such as 64-bit Raspberry Pi OS.', true);
-      } else {
-        say('You’re on <b>Linux' + (arch === 'x64' ? ', Intel/AMD' : '') + '</b>. This is the right download for you.');
-      }
+      if (arch === 'arm64') mine('arm');
+      else if (arch === 'arm32') say('You’re on <b>32-bit ARM Linux</b>. Bloom needs a 64-bit system, such as 64-bit Raspberry Pi OS.');
+      else if (arch === 'x64') mine('x64');
     } else if (os === 'mac') {
-      say('Bloom isn’t available for <b>Mac</b> yet. It runs on Windows and Linux.', true);
+      say('Bloom isn’t available for <b>Mac</b> yet. It runs on Windows and Linux.');
     } else if (os === 'chromeos') {
-      say('Bloom isn’t available for <b>Chromebooks</b> yet. It runs on Windows and Linux.', true);
+      say('Bloom isn’t available for <b>Chromebooks</b> yet. It runs on Windows and Linux.');
     } else if (os === 'mobile') {
-      say('Bloom is a desktop app for <b>Windows and Linux</b>. Open this page on your computer to download it.', true);
+      say('Bloom is a desktop app for <b>Windows and Linux</b>. Open this page on your computer to download it.');
       const share = document.getElementById('shareBtn');
       share.hidden = false;
+      if (navigator.share) share.textContent = 'Send link to my computer';
       share.addEventListener('click', async () => {
+        const url = location.href.split('#')[0];
         try {
-          if (navigator.share) await navigator.share({ title: 'Bloom', url: location.href.split('#')[0] });
-          else { await navigator.clipboard.writeText(location.href.split('#')[0]); share.textContent = 'Link copied'; }
+          if (navigator.share) await navigator.share({ title: 'Bloom', url });
+          else { await navigator.clipboard.writeText(url); share.textContent = 'Link copied'; }
         } catch (e) { /* share sheet closed */ }
       });
-      if (navigator.share) share.textContent = 'Send link to my computer';
     }
   })();
+
+
 
   /* ---------------- copy install command ---------------- */
   const copyBtn = document.getElementById('copyBtn');
