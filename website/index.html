@@ -282,6 +282,9 @@ header.site .wrap { display: flex; align-items: center; gap: 24px; padding-block
 .dl { justify-self: start; padding: .75em 1.4em; font-size: 1rem; }
 .dl .ico { width: 19px; height: 19px; }
 .dl small { font-weight: 500; opacity: .75; font-size: .8rem; margin-left: 4px; }
+.dlrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.dl.alt { background: var(--soft); color: var(--ink); }
+.dl.alt:hover { background: color-mix(in srgb, var(--accent) 14%, var(--soft)); }
 .dl[aria-disabled="true"] { background: var(--soft); color: var(--muted); cursor: default; transform: none; }
 .steps { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; }
 .steps li::marker { color: var(--accent); font-weight: 700; }
@@ -449,7 +452,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           <button type="button" role="tab" class="os" data-os="linux" aria-selected="false">Linux</button>
         </div>
         <div class="ospane" data-pane="windows" role="tabpanel">
-          <a class="btn dl" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Windows<small>.exe · 60 MB</small></a>
+          <a class="btn dl" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Windows<small>.exe · 56 MB</small></a>
           <ol class="steps">
             <li>Run <span class="mono">Bloom-Setup.exe</span>. It installs for your user only, no admin rights needed. If Windows warns about an unknown app, choose <b>More info → Run anyway</b>.</li>
             <li>Keep <b>Start when I log in</b> and <b>Open in Bloom</b> ticked.</li>
@@ -458,20 +461,23 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           <p class="req">Windows 10 and 11, 64-bit. ffmpeg comes built in. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Windows 11, Open in Bloom sits under Show more options.</p>
         </div>
         <div class="ospane" data-pane="linux" role="tabpanel" hidden>
-          <a class="btn dl" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Linux<small>.deb · 48 MB</small></a>
+          <div class="dlrow">
+            <a class="btn dl" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download for Linux<small>Intel / AMD · 45 MB</small></a>
+            <a class="btn dl alt" href="https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_arm64.deb">ARM64<small>41 MB</small></a>
+          </div>
           <ol class="steps">
             <li>Double-click the downloaded file and choose <b>Install</b>, or run the command below.</li>
             <li>Open <b>Bloom</b> from your apps. It starts by itself every time you log in.</li>
             <li>Find the Bloom flower in the tray, then Shift-drag any file.</li>
           </ol>
           <div class="term">
-            <div class="bar"><span>Or download and install from a terminal</span><button class="copy" id="copyBtn" type="button">Copy</button></div>
-            <pre id="cmd"><span class="p">$</span> wget -O /tmp/bloom.deb https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb
+            <div class="bar"><span>Or install from a terminal (picks Intel/AMD or ARM for you)</span><button class="copy" id="copyBtn" type="button">Copy</button></div>
+            <pre id="cmd"><span class="p">$</span> wget -O /tmp/bloom.deb https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_$(dpkg --print-architecture).deb
 <span class="p">$</span> sudo apt install /tmp/bloom.deb</pre>
           </div>
-          <p class="req">Ubuntu, Debian and Mint, 64-bit, in an X11 (Xorg) session. ffmpeg is installed with it. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Wayland the key wheels can't see drags.</p>
+          <p class="req">Ubuntu 22.04+, Debian 12+, Linux Mint and Raspberry Pi OS (64-bit), on Intel/AMD or ARM64, in an X11 (Xorg) session. Not sure which you have? Run <span class="mono">uname -m</span>: x86_64 is Intel/AMD, aarch64 is ARM64. ffmpeg is installed with it. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Wayland the key wheels can't see drags.</p>
         </div>
-        <span class="preview-tag">Early preview · version 0.2.0</span>
+        <span class="preview-tag">Early preview · version 0.2.1</span>
       </div>
     </div>
   </section>
@@ -900,7 +906,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
   /* ---------------- copy install command ---------------- */
   const copyBtn = document.getElementById('copyBtn');
   copyBtn.addEventListener('click', () => {
-    const text = 'wget -O /tmp/bloom.deb https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb && sudo apt install /tmp/bloom.deb';
+    const text = 'wget -O /tmp/bloom.deb https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_$(dpkg --print-architecture).deb && sudo apt install /tmp/bloom.deb';
     const done = () => { copyBtn.textContent = 'Copied'; setTimeout(() => copyBtn.textContent = 'Copy', 1600); };
     const fallback = () => { const r = document.createRange(); r.selectNodeContents(document.getElementById('cmd')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); copyBtn.textContent = 'Selected · press Ctrl+C'; };
     try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
