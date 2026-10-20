@@ -1,6 +1,7 @@
 package io.github.omjasoliya.bloom
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -13,9 +14,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Parcelable
+import android.text.InputType
 import android.util.Size
 import android.view.View
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import java.util.concurrent.Executors
@@ -76,7 +80,7 @@ class BloomActivity : Activity() {
         findViewById<View>(R.id.close).setOnClickListener { leave() }
         tabs.forEach { (m, tab) -> tab.setOnClickListener { showMode(m) } }
         wheel.onPick = ::pick
-        wheel.onCenter = ::leave
+        wheel.onCenter = { if (mode == "fit") showMode("tools") else leave() }   // the flower steps back out of Fit size
         openButton.setOnClickListener { saved.singleOrNull()?.let(::open) }
         shareButton.setOnClickListener { share(saved.map { it.uri }, saved.map { it.mime }) }
         doneButton.setOnClickListener { closeResult() }
@@ -98,6 +102,7 @@ class BloomActivity : Activity() {
     override fun onBackPressed() {
         when {
             result.visibility == View.VISIBLE && !busy -> closeResult()
+            stage.visibility == View.VISIBLE && mode == "fit" -> showMode("tools")
             stage.visibility == View.VISIBLE && !fromShare -> showHome()
             else -> @Suppress("DEPRECATION") super.onBackPressed()
         }
@@ -191,8 +196,9 @@ class BloomActivity : Activity() {
             val has = Engine.petals(key, inputs).isNotEmpty()
             tab.isEnabled = has
             tab.alpha = if (has) 1f else 0.35f
-            tab.isSelected = key == m
-            tab.setTextColor(getColor(if (key == m) R.color.on_accent else R.color.ink))
+            val on = key == m || (key == "tools" && m == "fit")
+            tab.isSelected = on
+            tab.setTextColor(getColor(if (on) R.color.on_accent else R.color.ink))
         }
         wheel.setPetals(Engine.petals(m, inputs))
         val total = inputs.sumOf { max(0L, it.size) }
@@ -200,6 +206,7 @@ class BloomActivity : Activity() {
         hint.text = when (m) {
             "convert" -> "Tap a format. The new file goes to ${Downloads.WHERE}."
             "tools" -> "Tap a tool. Your original file isn't changed."
+            "fit" -> "Pick the limit your form allows. You get a JPG just under it."
             else -> "Tap an action."
         }
     }
@@ -214,16 +221,24 @@ class BloomActivity : Activity() {
             toast(if (inputs.size == 1) "Copied the file name" else "Copied ${inputs.size} file names")
             return
         }
+        if (m == "tools" && petal.key == "fit") return showMode("fit")
+        if (m == "fit" && petal.key == "custom") return askCustomFit(petal)
+        start(m, petal.key, petal)
+    }
+
+    /** Runs [key] in the background; [shown] is the petal that lights up meanwhile. */
+    private fun start(m: String, key: String, shown: Petal) {
         busy = true
-        wheel.setBusy(petal)
+        wheel.setBusy(shown)
         hint.text = when (m) {
-            "convert" -> "Converting to ${petal.label}…"
-            else -> "${petal.label}…"
+            "convert" -> "Converting to ${shown.label}…"
+            "fit" -> "Fitting under ${key.substringBefore(':')} KB…"
+            else -> "${shown.label}…"
         }
         val files = inputs
         worker.execute {
             val outcome = runCatching {
-                Engine.run(this, m, petal.key, files) { p -> main.post { wheel.progress = p.coerceIn(0, 100) } }
+                Engine.run(this, m, key, files) { p -> main.post { wheel.progress = p.coerceIn(0, 100) } }
             }
             main.post {
                 if (isDestroyed) return@post
@@ -234,12 +249,45 @@ class BloomActivity : Activity() {
         }
     }
 
+    /** Custom Fit size: a KB limit, and the exact width and height if the form asks for them. */
+    private fun askCustomFit(petal: Petal) {
+        val dp = resources.displayMetrics.density
+        fun field(hint: String) = EditText(this).apply {
+            this.hint = hint
+            inputType = InputType.TYPE_CLASS_NUMBER
+            isSingleLine = true
+        }
+        val kb = field("Size limit in KB, e.g. 50")
+        val width = field("Width in px (optional)")
+        val height = field("Height in px (optional)")
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val pad = (22 * dp).toInt()
+            setPadding(pad, (6 * dp).toInt(), pad, 0)
+            addView(kb)
+            addView(width)
+            addView(height)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Custom size")
+            .setMessage("Fill in the width and height too if the form asks for exact dimensions.")
+            .setView(box)
+            .setPositiveButton("Fit") { _, _ ->
+                val limit = kb.text.toString().toIntOrNull()
+                if (limit == null || limit < 1) toast("Enter a size limit in KB.")
+                else start("fit", "$limit:${width.text.toString().toIntOrNull() ?: 0}:${height.text.toString().toIntOrNull() ?: 0}", petal)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+        kb.requestFocus()
+    }
+
     private fun showResult(outcome: Outcome) {
         saved = outcome.saved
         resultTitle.text = "✓  ${outcome.title}"
         resultBody.text = when (saved.size) {
             0 -> "Nothing to save."
-            1 -> "Saved ${saved[0].name}\nin ${Downloads.WHERE}"
+            1 -> "Saved ${saved[0].name}" + (outcome.detail?.let { " ($it)" } ?: "") + "\nin ${Downloads.WHERE}"
             else -> "Saved ${saved.size} files in ${Downloads.WHERE}"
         }
         openButton.visibility = if (saved.size == 1) View.VISIBLE else View.GONE

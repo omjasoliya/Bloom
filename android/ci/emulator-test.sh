@@ -48,6 +48,11 @@ expect() {
   echo "missing: $1"; adb shell ls -la /sdcard/Download/Bloom/ || true; return 1
 }
 
+max_size() {   # max_size <file in Downloads/Bloom> <bytes>
+  n=$(adb shell stat -c %s "/sdcard/Download/Bloom/$1" | tr -d '\r')
+  echo "$1: $n bytes (limit $2)"; [ "$n" -le "$2" ]
+}
+
 share() {   # share <file> <mime>
   adb shell am start -W -a android.intent.action.SEND -t "$2" \
     --eu android.intent.extra.STREAM "file:///data/user/0/$PKG/files/$1" -n "$PKG/.BloomActivity" > /dev/null
@@ -84,6 +89,37 @@ tap Actions
 shot 05-photo-actions
 tap Zip
 expect test-photo.zip
+tap Done
+
+# Fit size: a preset, then Custom with exact dimensions (typed into the dialog)
+share test-photo.jpg image/jpeg
+tap Tools
+tap "Fit size"
+shot 11-fit-sizes
+tap "20 KB"
+expect test-photo-20kb.jpg
+shot 12-fit-done
+max_size test-photo-20kb.jpg 20480
+tap Done
+
+share test-photo.jpg image/jpeg
+tap Tools
+tap "Fit size"
+tap Custom
+sleep 1
+shot 13-fit-custom
+adb shell input text 15
+adb shell input keyevent 61
+adb shell input text 200
+adb shell input keyevent 61
+adb shell input text 230
+tap Fit || tap FIT
+expect test-photo-15kb.jpg
+max_size test-photo-15kb.jpg 15360
+adb pull /sdcard/Download/Bloom/test-photo-15kb.jpg "$OUT/" > /dev/null
+python3 -c "import struct,sys; d=open(sys.argv[1],'rb').read(); i=2
+while d[i+1] not in (0xC0, 0xC2): i += 2 + struct.unpack('>H', d[i+2:i+4])[0]
+h, w = struct.unpack('>HH', d[i+5:i+9]); print('custom fit:', w, 'x', h); assert (w, h) == (200, 230)" "$OUT/test-photo-15kb.jpg"
 tap Done
 
 share test-doc.pdf application/pdf

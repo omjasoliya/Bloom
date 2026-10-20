@@ -1,5 +1,6 @@
 """24px stroke icons for Tools and Actions petals (same set as the website)."""
 PATHS = {
+    "fit": "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M9 12h6M12 9v6",
     "compress": "M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7",
     "resize": "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7",
     "rotate": "M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5",

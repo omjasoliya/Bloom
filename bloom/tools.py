@@ -3,6 +3,8 @@
 Tools make a new, modified copy next to the original. Actions do something with
 the file itself. Only "Move to Desktop" moves the original, and it says so.
 """
+import io
+import math
 import os
 import shutil
 import zipfile
@@ -115,6 +117,86 @@ def t_grayscale(paths):
     return out
 
 
+# Forms (exams, jobs, passports, KYC) ask for things like "photo under 50 KB, 200x230 px".
+FIT_SIZES = [("20", "20 KB"), ("50", "50 KB"), ("100", "100 KB"), ("200", "200 KB"), ("500", "500 KB"),
+             ("custom", "Custom")]
+
+
+def _jpeg(im, quality):
+    buf = io.BytesIO()
+    im.save(buf, "JPEG", quality=quality, optimize=True)
+    return buf.getvalue()
+
+
+def _best_quality(im, limit, lo, hi):
+    """Highest JPEG quality in lo..hi that fits in limit bytes: (data, quality) or None."""
+    best = None
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        data = _jpeg(im, mid)
+        if len(data) <= limit:
+            best, lo = (data, mid), mid + 1
+        else:
+            hi = mid - 1
+    return best
+
+
+def _fit_jpeg(im, limit, exact):
+    """JPEG bytes under limit, keeping as many pixels and as much quality as fit.
+    With exact dimensions only the quality can give way."""
+    from PIL import Image
+    if exact:
+        found = _best_quality(im, limit, 5, 100)        # up to 100: forms often set a minimum size too
+        return (found[0], im.size) if found else None
+    # Start at a size that should fit at good quality; never larger than the original.
+    scale = min(1.0, math.sqrt(limit * 8 / 1.8 / (im.width * im.height)))
+    best, cur = None, im
+    for _ in range(10):
+        cur = im if scale >= 1 else im.resize((max(16, round(im.width * scale)), max(16, round(im.height * scale))),
+                                              Image.LANCZOS)
+        found = _best_quality(cur, limit, 40, 92)
+        if found:
+            best = (found[0], cur.size)
+            if found[1] < 88 or scale >= 1:
+                return best
+            scale = min(1.0, scale * 1.2)          # room to spare: try more pixels
+        elif best:
+            return best
+        elif min(cur.size) <= 16:
+            break
+        else:
+            scale *= min(0.95, max(0.3, math.sqrt(limit / len(_jpeg(cur, 40))) * 0.95))
+    found = _best_quality(cur, limit, 5, 39)
+    return best or ((found[0], cur.size) if found else None)
+
+
+def fit_image(path, kb, width=0, height=0):
+    """A JPEG copy of the image that fits in kb KB, optionally at exactly width x height
+    (cropped from the centre) or at that width / height. Returns (path, (w, h), bytes)."""
+    from PIL import Image, ImageOps
+    im = _open_image(path)
+    if im.mode in ("RGBA", "LA", "P"):
+        im = im.convert("RGBA")
+        flat = Image.new("RGB", im.size, "white")
+        flat.paste(im, mask=im.getchannel("A"))
+        im = flat
+    im = im.convert("RGB")
+    if width and height:
+        im = ImageOps.fit(im, (width, height), Image.LANCZOS)
+    elif width:
+        im = im.resize((width, max(1, round(im.height * width / im.width))), Image.LANCZOS)
+    elif height:
+        im = im.resize((max(1, round(im.width * height / im.height)), height), Image.LANCZOS)
+    found = _fit_jpeg(im, kb * 1024, bool(width or height))
+    if not found:
+        raise ValueError(f"{Path(path).name} can't be made small enough for {kb} KB"
+                         + (f" at {width or '?'}x{height or '?'} px" if width or height else "") + ". Try a larger size.")
+    data, size = found
+    target = _sibling(path, f"{kb}kb", "jpg")
+    target.write_bytes(data)
+    return target, size, len(data)
+
+
 def t_images_to_pdf(paths):
     ims = [_open_image(p).convert("RGB") for p in paths]
     target = _sibling(paths[0], "combined", "pdf") if len(paths) > 1 else \
@@ -219,9 +301,11 @@ def t_normalize_audio(paths):
 
 # key: (label shown on the petal, function, needs 2+ files)
 TOOLS = {
-    "image": [("compress", "Compress", t_compress_image, False), ("resize", "Half size", t_resize_half, False),
-              ("rotate", "Rotate", t_rotate, False), ("strip", "Metadata", t_strip_metadata, False),
-              ("gray", "Grayscale", t_grayscale, False), ("topdf", "To PDF", t_images_to_pdf, False)],
+    # "fit" has no function here: the app asks for a size first, then calls fit_image().
+    "image": [("fit", "Fit size", None, False), ("compress", "Compress", t_compress_image, False),
+              ("resize", "Half size", t_resize_half, False), ("rotate", "Rotate", t_rotate, False),
+              ("strip", "Metadata", t_strip_metadata, False), ("gray", "Grayscale", t_grayscale, False),
+              ("topdf", "To PDF", t_images_to_pdf, False)],
     "pdf": [("compress", "Compress", t_compress_pdf, False), ("merge", "Merge", t_merge_pdfs, True),
             ("split", "Split", t_split_pdf, False)],
     "video": [("compress", "Compress", t_compress_video, False), ("720p", "720p", t_video_720p, False),

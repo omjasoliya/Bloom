@@ -35,6 +35,7 @@ import com.tom_roush.pdfbox.pdmodel.PDPage
 import com.tom_roush.pdfbox.pdmodel.PDPageContentStream
 import com.tom_roush.pdfbox.pdmodel.common.PDRectangle
 import com.tom_roush.pdfbox.pdmodel.graphics.image.JPEGFactory
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
@@ -44,19 +45,25 @@ import java.util.zip.ZipOutputStream
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 class Petal(val key: String, val label: String)
 
-class Outcome(val title: String, val saved: List<Saved>)
+class Outcome(val title: String, val saved: List<Saved>, val detail: String? = null)
 
 /** What Bloom can do with some files, and doing it. Everything runs on the phone. */
 @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
 object Engine {
     val MODES = listOf("convert", "tools", "actions")
-    val TITLES = mapOf("convert" to "Convert", "tools" to "Tools", "actions" to "Actions")
+    val TITLES = mapOf("convert" to "Convert", "tools" to "Tools", "actions" to "Actions", "fit" to "Fit size")
+
+    // Forms (exams, jobs, passports, KYC) ask for things like "photo under 50 KB, 200x230 px".
+    val FIT_SIZES = listOf(
+        Petal("20", "20 KB"), Petal("50", "50 KB"), Petal("100", "100 KB"), Petal("200", "200 KB"),
+        Petal("500", "500 KB"), Petal("custom", "Custom"))
 
     private val IMAGE_TOOLS = listOf(
-        Petal("compress", "Compress"), Petal("half", "Half size"), Petal("rotate", "Rotate"),
+        Petal("fit", "Fit size"), Petal("compress", "Compress"), Petal("half", "Half size"), Petal("rotate", "Rotate"),
         Petal("clean", "No metadata"), Petal("gray", "Grayscale"))
     private val ACTIONS = listOf(
         Petal("zip", "Zip"), Petal("save", "To Downloads"), Petal("share", "Share"), Petal("name", "Copy name"))
@@ -68,6 +75,7 @@ object Engine {
     fun petals(mode: String, inputs: List<Input>): List<Petal> = when (mode) {
         "convert" -> convertFor(inputs)
         "tools" -> toolsFor(inputs)
+        "fit" -> if (kindOf(inputs) == Kind.IMAGE) FIT_SIZES else emptyList()
         else -> ACTIONS
     }
 
@@ -101,6 +109,7 @@ object Engine {
         return when (mode) {
             "convert" -> Outcome("Converted to ${key.uppercase()}", convert(ctx, key, inputs, progress))
             "tools" -> tool(ctx, key, inputs, progress)
+            "fit" -> fit(ctx, key, inputs, progress)
             else -> action(ctx, key, inputs)
         }
     }
@@ -166,6 +175,85 @@ object Engine {
         } finally {
             copy.delete()
         }
+    }
+
+    // ---- fit size ----
+
+    /** [key] is "50" or "50:413:531" (KB, then an optional exact width and height in px). */
+    private fun fit(ctx: Context, key: String, inputs: List<Input>, progress: (Int) -> Unit): Outcome {
+        val parts = key.split(":")
+        val kb = parts[0].toInt()
+        val width = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        val height = parts.getOrNull(2)?.toIntOrNull() ?: 0
+        var detail = ""
+        val saved = inputs.mapIndexed { i, input ->
+            val image = sized(opaque(decode(ctx, input, maxSide = 6000)), width, height)
+            val (bytes, w, h) = fitJpeg(image, kb * 1024, exact = width > 0 || height > 0)
+                ?: throw IOException("${input.name} can't be made small enough for $kb KB" +
+                    (if (width > 0 || height > 0) " at ${width}×${height} px" else "") + ". Try a larger size.")
+            detail = "${humanSize(bytes.size.toLong())} · $w×$h px"
+            progress((i + 1) * 100 / inputs.size)
+            Downloads.save(ctx, "${input.stem}-${kb}kb.jpg") { it.write(bytes) }
+        }
+        return Outcome("Fits in $kb KB", saved, if (saved.size == 1) detail else null)
+    }
+
+    /** Exactly width x height (cropped from the centre), or that width / height keeping the shape. */
+    private fun sized(src: Bitmap, width: Int, height: Int): Bitmap = when {
+        width > 0 && height > 0 -> {
+            val scale = max(width.toFloat() / src.width, height.toFloat() / src.height)
+            val w = max(width, (src.width * scale).roundToInt())
+            val h = max(height, (src.height * scale).roundToInt())
+            val scaled = Bitmap.createScaledBitmap(src, w, h, true)
+            Bitmap.createBitmap(scaled, (w - width) / 2, (h - height) / 2, width, height)
+        }
+        width > 0 -> Bitmap.createScaledBitmap(src, width, max(1, (src.height * width.toFloat() / src.width).roundToInt()), true)
+        height > 0 -> Bitmap.createScaledBitmap(src, max(1, (src.width * height.toFloat() / src.height).roundToInt()), height, true)
+        else -> src
+    }
+
+    private fun jpeg(bitmap: Bitmap, quality: Int): ByteArray =
+        ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.JPEG, quality, it) }.toByteArray()
+
+    /** Highest JPEG quality in lo..hi that fits in limit bytes, with that quality. */
+    private fun bestQuality(bitmap: Bitmap, limit: Int, lo: Int, hi: Int): Pair<ByteArray, Int>? {
+        var low = lo
+        var high = hi
+        var best: Pair<ByteArray, Int>? = null
+        while (low <= high) {
+            val mid = (low + high) / 2
+            val data = jpeg(bitmap, mid)
+            if (data.size <= limit) {
+                best = Pair(data, mid)
+                low = mid + 1
+            } else high = mid - 1
+        }
+        return best
+    }
+
+    /** JPEG bytes under limit, keeping as many pixels and as much quality as fit.
+     *  With exact dimensions only the quality can give way. */
+    private fun fitJpeg(src: Bitmap, limit: Int, exact: Boolean): Triple<ByteArray, Int, Int>? {
+        if (exact) return bestQuality(src, limit, 5, 100)?.let { Triple(it.first, src.width, src.height) }
+        // Start at a size that should fit at good quality; never larger than the original.
+        var scale = min(1.0, sqrt(limit * 8 / 1.8 / (src.width.toDouble() * src.height)))
+        var best: Triple<ByteArray, Int, Int>? = null
+        var cur = src
+        repeat(10) {
+            cur = if (scale >= 1.0) src else Bitmap.createScaledBitmap(
+                src, max(16, (src.width * scale).roundToInt()), max(16, (src.height * scale).roundToInt()), true)
+            val found = bestQuality(cur, limit, 40, 92)
+            if (found != null) {
+                best = Triple(found.first, cur.width, cur.height)
+                if (found.second < 88 || scale >= 1.0) return best
+                scale = min(1.0, scale * 1.2)          // room to spare: try more pixels
+            } else {
+                if (best != null) return best
+                if (min(cur.width, cur.height) <= 16) return bestQuality(cur, limit, 5, 39)?.let { Triple(it.first, cur.width, cur.height) }
+                scale *= (sqrt(limit.toDouble() / jpeg(cur, 40).size) * 0.95).coerceIn(0.3, 0.95)
+            }
+        }
+        return best ?: bestQuality(cur, limit, 5, 39)?.let { Triple(it.first, cur.width, cur.height) }
     }
 
     // ---- tools ----

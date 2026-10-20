@@ -20,7 +20,7 @@ SIZE = RING * 2 + 4
 ACCENT = QColor(107, 76, 246)                        # iris violet, matches the website
 PETAL = QColor(248, 247, 255)
 INK = QColor(20, 32, 25)
-MODE_TITLES = {"convert": "Convert", "tools": "Tools", "actions": "Actions"}
+MODE_TITLES = {"convert": "Convert", "tools": "Tools", "actions": "Actions", "fit": "Fit size"}
 FONT = "Segoe UI" if sys.platform.startswith("win") else "Sans"
 
 

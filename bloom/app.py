@@ -11,10 +11,11 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QCursor, QGuiApplication, QIcon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
+from PySide6.QtWidgets import (QApplication, QDialog, QDialogButtonBox, QFormLayout, QLabel, QMenu, QSpinBox,
+                               QSystemTrayIcon)
 
 from . import converters, inputstate, tools
 from . import platform_utils as pu
@@ -31,6 +32,8 @@ def items_for(mode, paths):
         return [(f, f.upper()) for f in converters.formats_for(files)]
     if mode == "tools":
         return tools.tools_for(files)
+    if mode == "fit":
+        return tools.FIT_SIZES if files else []
     return tools.actions_for(paths)
 
 
@@ -41,11 +44,46 @@ def first_mode_with_items(paths):
     return None
 
 
+def ask_custom_fit():
+    """Size limit and optional exact dimensions for Fit size, as "kb:w:h", or None."""
+    dialog = QDialog()
+    dialog.setWindowTitle("Fit size")
+    form = QFormLayout(dialog)
+    form.addRow(QLabel("Make a JPG under this size. Fill in the width and height\n"
+                       "too if the form asks for exact dimensions (0 = keep)."))
+    kb, width, height = QSpinBox(), QSpinBox(), QSpinBox()
+    kb.setRange(1, 100000)
+    kb.setValue(50)
+    kb.setSuffix(" KB")
+    for box in (width, height):
+        box.setRange(0, 20000)
+        box.setSuffix(" px")
+    form.addRow("Under", kb)
+    form.addRow("Width", width)
+    form.addRow("Height", height)
+    buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+    buttons.accepted.connect(dialog.accept)
+    buttons.rejected.connect(dialog.reject)
+    form.addRow(buttons)
+    dialog.setWindowFlag(Qt.WindowStaysOnTopHint)
+    if dialog.exec() != QDialog.Accepted:
+        return None
+    return f"{kb.value()}:{width.value()}:{height.value()}"
+
+
 class Jobs(QObject):
     """Runs a petal's work in the background and reports back on the GUI thread."""
     finished = Signal(str, str)        # title, body
+    need_fit = Signal(list)            # Fit size was chosen: ask for a size with a second wheel
 
     def run(self, mode, key, paths):
+        if mode == "tools" and key == "fit":
+            self.need_fit.emit(paths)
+            return
+        if mode == "fit" and key == "custom":
+            key = ask_custom_fit()
+            if not key:
+                return
         if mode == "actions" and key == "copypath":     # the clipboard lives on the GUI thread
             summary, _ = tools.run_action(key, paths, QGuiApplication.clipboard().setText)
             self.finished.emit(summary, "\n".join(Path(p).name for p in paths[:3]))
@@ -65,6 +103,14 @@ class Jobs(QObject):
                     title = f"Converted to {key.upper()}"
                 elif mode == "tools":
                     made, title = tools.run_tool(key, paths), "Done"
+                elif mode == "fit":
+                    kb, width, height = (int(v or 0) for v in (key.split(":") + ["0", "0"])[:3])
+                    made, details = [], []
+                    for p in [p for p in paths if os.path.isfile(p)]:
+                        target, (w, h), size = tools.fit_image(p, kb, width, height)
+                        made.append(target)
+                        details.append(f"{size / 1024:.1f} KB · {w}×{h} px")
+                    title = f"Fits in {kb} KB" + (f" · {details[0]}" if len(details) == 1 else "")
                 else:
                     title, made = tools.run_action(key, paths)
                 names = ", ".join(Path(m).name for m in made[:3]) + (" …" if len(made) > 3 else "")
@@ -179,6 +225,12 @@ class PickCollector(QObject):
         self.outside = QTimer(self, interval=30, timeout=self.watch_outside)
         self.was_down = True
 
+    def open_mode(self, mode, paths):
+        """Opens the wheel for mode at the cursor right away (the Fit size choices)."""
+        if self.wheel.open_for_click(QCursor.pos(), mode, paths):
+            self.was_down = True
+            self.outside.start()
+
     def add(self, paths):
         self.paths += [p for p in paths if os.path.exists(p) and p not in self.paths]
         self.timer.start()
@@ -277,6 +329,7 @@ def main():
     jobs.finished.connect(notify)
     watcher = DragWatcher(Wheel(items_for), jobs, lambda: paused["on"])
     picker = PickCollector(jobs, notify, watcher.input)
+    jobs.need_fit.connect(lambda paths: QTimer.singleShot(150, lambda: picker.open_mode("fit", paths)))
 
     def on_connection():
         sock = server.nextPendingConnection()
