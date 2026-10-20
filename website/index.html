@@ -326,6 +326,52 @@ header.site .wrap { display: flex; align-items: center; gap: 24px; padding-block
 .pl-steps button[aria-current="step"] { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
 .pl-steps button[aria-current="step"] .n { background: var(--accent); color: var(--accent-ink); }
 
+/* Android: a phone on a soft wall; taps are rings, no cursor */
+.screen[data-os="android"] { font-family: Roboto, "Noto Sans", system-ui, sans-serif; }
+.screen[data-os="android"] .wall { background: radial-gradient(70% 90% at 20% 110%, #f59ac8 0%, transparent 60%), radial-gradient(60% 80% at 90% 0%, #8ec5ff 0%, transparent 60%), #9a8cff; }
+.phone { position: absolute; left: 50%; top: 50%; width: 27cqw; height: 57cqw; translate: -50% -50%; padding: .8cqw; border-radius: 3.8cqw; background: #101114; box-shadow: 0 1.6cqw 4cqw rgba(20, 10, 60, .45); }
+.ps { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 3cqw; background: #fff; color: #1d1b20; font-size: 1.2cqw; }
+.ps-bar { position: absolute; left: 0; right: 0; top: 0; height: 3.2cqw; z-index: 3; display: flex; align-items: center; padding: 0 2cqw; font-size: 1.05cqw; font-weight: 600; }
+.ps-bar::after { content: ""; margin-left: auto; width: 4.5cqw; height: .9cqw; border-radius: .3cqw; background: linear-gradient(90deg, #1d1b20 0 60%, transparent 60% 68%, #1d1b20 68%); opacity: .75; }
+.ps-url { position: absolute; left: 4%; right: 4%; top: 3.6cqw; height: 3cqw; display: flex; align-items: center; padding: 0 1.2cqw; border-radius: 99px; background: #eef0f4; font-size: 1.05cqw; color: #444; }
+.ps-page { position: absolute; inset: 7.6cqw 0 0 0; background: #f3f6f1; }
+.ps-page img { position: absolute; left: 50%; top: 10%; width: 7cqw; margin-left: -3.5cqw; }
+.ps-page b { position: absolute; left: 0; right: 0; top: 27%; text-align: center; font-size: 2.8cqw; color: #142019; }
+.ps-page i { position: absolute; left: 18%; right: 18%; height: .9cqw; border-radius: 2px; background: #dfe4dc; }
+.ps-btn { position: absolute; left: 12%; right: 12%; height: 4.4cqw; display: grid; place-items: center; border-radius: 99px; background: #6b4cf6; color: #fff; font-weight: 700; font-size: 1.25cqw; }
+.ps-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 2cqw 2cqw 2.6cqw; background: #fff; border-radius: 2.4cqw 2.4cqw 0 0; box-shadow: 0 -.6cqw 2.4cqw rgba(0, 0, 0, .2); }
+.on .ps-sheet.up { animation: sheetUp .45s var(--t) cubic-bezier(.2, .9, .3, 1) both; }
+@keyframes sheetUp { from { translate: 0 110%; } }
+.ps-row { display: flex; align-items: center; gap: 1.4cqw; }
+.ps-row .fileico { width: 3cqw; height: 3.6cqw; }
+.ps-row .dlname { flex: 1; }
+.ps-link { color: #6b4cf6; font-weight: 700; font-size: 1.2cqw; padding: .8cqw 1cqw; border-radius: 99px; }
+.ps-dim { position: absolute; inset: 0; z-index: 2; background: rgba(0, 0, 0, .45); }
+.ps-dialog { position: absolute; left: 7%; right: 7%; top: 30%; z-index: 3; padding: 2.4cqw 2.2cqw 1.6cqw; border-radius: 2.6cqw; background: #f3edf7; font-size: 1.15cqw; line-height: 1.45; }
+.ps-dialog b { display: block; margin-bottom: 1cqw; font-size: 1.55cqw; line-height: 1.3; }
+.ps-dialog img { display: block; width: 4.2cqw; margin: 0 auto 1.2cqw; }
+.ps-acts { display: flex; justify-content: flex-end; gap: .6cqw; margin-top: 1.6cqw; }
+.ps-acts .ps-link { padding: .8cqw 1.2cqw; }
+.ps-set { position: absolute; inset: 3.2cqw 0 0 0; z-index: 4; background: #fef7ff; padding: 2.4cqw 2cqw; }
+.ps-set h4 { margin: 0 0 3cqw; font-size: 2.2cqw; font-weight: 500; }
+.ps-app { display: flex; align-items: center; gap: 1.2cqw; margin-bottom: 3cqw; font-size: 1.35cqw; }
+.ps-app .tb-ico { width: 3.4cqw; height: 3.4cqw; }
+.ps-toggle { display: flex; align-items: center; justify-content: space-between; padding: 1.6cqw 0; border-top: 1px solid #e3dfe8; font-size: 1.3cqw; }
+.sw { position: relative; width: 4.6cqw; height: 2.6cqw; border-radius: 99px; background: #e7e0ec; box-shadow: inset 0 0 0 .2cqw #79747e; }
+.sw::after { content: ""; position: absolute; left: .55cqw; top: .55cqw; width: 1.5cqw; height: 1.5cqw; border-radius: 50%; background: #79747e; }
+.on .sw { animation: swOn .25s var(--t) forwards; }
+.on .sw::after { animation: knobOn .25s var(--t) forwards; }
+@keyframes swOn { to { background: #6b4cf6; box-shadow: none; } }
+@keyframes knobOn { to { left: 2.45cqw; top: .35cqw; width: 1.9cqw; height: 1.9cqw; background: #fff; } }
+.ps-inst { position: absolute; inset: 3.2cqw 0 0 0; z-index: 4; display: grid; place-content: center; justify-items: center; gap: 1.2cqw; background: #fff; font-size: 1.4cqw; }
+.ps-inst img { width: 7cqw; }
+.ps-photo { position: absolute; inset: 3.2cqw 0 0 0; background: linear-gradient(160deg, #ffd27a, #f07f4f 45%, #6b4cf6); }
+.ps-apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6cqw .6cqw; margin-top: 1.6cqw; text-align: center; font-size: .95cqw; }
+.ps-apps span { display: grid; justify-items: center; gap: .5cqw; }
+.ps-apps i { width: 4.2cqw; height: 4.2cqw; border-radius: 50%; background: var(--c); }
+.ps-apps img { width: 4.2cqw; height: 4.2cqw; border-radius: 50%; background: #f1edff; padding: .5cqw; box-sizing: border-box; }
+.ps-shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
 /* the little computer screen; everything inside is sized in cqw so it scales */
 .screen { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 4px; container-type: inline-size; isolation: isolate; color: #1b1b1b; user-select: none; font-family: "Segoe UI", system-ui, sans-serif; line-height: 1.3; }
 .screen[data-os="linux"] { font-family: Ubuntu, "Noto Sans", system-ui, sans-serif; }
@@ -703,6 +749,60 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
               <div class="sc-toast fx-in" style="--t:5.4s"><img src="icon.png" alt=""><span><b>Converted to JPG</b><small>Saved photo.jpg next to photo.png</small></span></div>
               <span class="ring" style="--x:55%;--y:43%;--t:4.75s"></span><svg class="cur" viewBox="0 0 14 21"><path d="M1 1v16l4-3.6 3 6.6 2.6-1.2-3-6.4H13z"/></svg>
             </div>
+            <div class="scene" data-scene="adl">
+              <div class="phone"><div class="ps"><div class="ps-bar">10:42</div>
+                <div class="ps-url">takebloom.vercel.app</div>
+                <div class="ps-page"><img src="icon.png" alt=""><b>Bloom</b><i style="top:40%"></i><i style="top:45%;left:26%;right:26%"></i>
+                  <span class="ps-btn" style="top:56%"><span class="press" style="--t:1.2s;display:block">Download for Android</span></span></div>
+                <div class="ps-sheet up" style="--t:1.6s"><div class="ps-row"><span class="fileico"></span>
+                  <span class="dlname"><b>Bloom.apk</b><span class="dlbar"><i class="fill" style="--t:1.9s;--len:1.6s"></i></span><small><span data-t="size">22 MB</span> <span class="fx-in" style="--t:3.5s">· Done</span></small></span>
+                  <span class="ps-link fx-in" style="--t:3.5s"><span class="press" style="--t:4.3s;display:block">Open</span></span></div></div>
+                <span class="ring" style="--x:50%;--y:67%;--t:1.2s"></span><span class="ring" style="--x:86%;--y:91%;--t:4.3s"></span>
+              </div></div>
+            </div>
+
+            <div class="scene" data-scene="aunk">
+              <div class="phone"><div class="ps"><div class="ps-bar">10:42</div>
+                <div class="ps-photo" style="background:#f3f6f1"></div>
+                <div class="layer fx-out" style="--t:1.7s"><div class="ps-dim"></div>
+                  <div class="ps-dialog"><b>Install unknown apps</b>For your security, your phone isn’t allowed to install unknown apps from this source.
+                    <div class="ps-acts"><span class="ps-link">Cancel</span><span class="ps-link"><span class="press" style="--t:1.2s;display:block">Settings</span></span></div></div></div>
+                <div class="ps-set fx-in" style="--t:1.75s"><h4>Install unknown apps</h4>
+                  <div class="ps-app"><span class="tb-ico web"></span>Chrome</div>
+                  <div class="ps-toggle">Allow from this source<span class="sw" style="--t:3.3s"></span></div></div>
+                <span class="ring" style="--x:80%;--y:56%;--t:1.2s"></span><span class="ring" style="--x:80%;--y:35%;--t:3.3s"></span>
+              </div></div>
+            </div>
+
+            <div class="scene" data-scene="ainst">
+              <div class="phone"><div class="ps"><div class="ps-bar">10:43</div>
+                <div class="ps-photo" style="background:#f3f6f1"></div>
+                <div class="layer fx-out" style="--t:1.9s"><div class="ps-dim"></div>
+                  <div class="ps-dialog"><img src="icon.png" alt=""><b style="text-align:center">Bloom</b>Do you want to install this app?
+                    <div class="ps-acts"><span class="ps-link">Cancel</span><span class="ps-link"><span class="press" style="--t:1.3s;display:block">Install</span></span></div></div></div>
+                <div class="ps-inst fx-in" style="--t:1.95s"><img src="icon.png" alt=""><b>Bloom</b>
+                  <span class="dlbar" style="width:14cqw"><i class="fill" style="--t:2.1s;--len:1.4s"></i></span>
+                  <span class="fx-in" style="--t:3.6s;color:#1f8a4c;font-weight:700">✓ App installed</span></div>
+                <span class="ring" style="--x:80%;--y:62%;--t:1.3s"></span>
+              </div></div>
+            </div>
+
+            <div class="scene" data-scene="ashare">
+              <div class="phone"><div class="ps"><div class="ps-bar">10:44</div>
+                <div class="ps-photo"></div>
+                <div class="ps-sheet up" style="--t:.9s"><b style="font-size:1.3cqw">Share</b>
+                  <div class="ps-apps"><span><i style="--c:#25d366"></i>WhatsApp</span><span><i style="--c:#1a73e8"></i>Drive</span><span><img class="press" style="--t:2.9s" src="icon.png" alt="">Bloom</span><span><i style="--c:#ea4335"></i>Gmail</span><span><i style="--c:#fbbc05"></i>Keep</span><span><i style="--c:#34a853"></i>Messages</span><span><i style="--c:#7b61ff"></i>Nearby</span><span><i style="--c:#9aa0a6"></i>More</span></div></div>
+                <span class="ring" style="--x:62.5%;--y:77%;--t:2.9s"></span>
+              </div></div>
+            </div>
+
+            <div class="scene" data-scene="awheel">
+              <div class="phone"><div class="ps">
+                <img class="ps-shot" src="android/wheel.jpg" alt="">
+                <img class="ps-shot fx-in" style="--t:2.4s" src="android/done.jpg" alt="">
+                <span class="ring" style="--x:17%;--y:59%;--t:1.5s"></span>
+              </div></div>
+            </div>
           </div>
           <div class="pl-bar"><button type="button" class="pl-btn" id="plPlay" aria-label="Pause"></button><div class="pl-segs" id="plSegs"></div><span class="pl-label" id="plLabel"></span></div>
           <ol class="pl-steps" id="plSteps" aria-label="Install steps"></ol>
@@ -731,6 +831,11 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
             <span class="opt-txt"><b>Linux ARM64<span class="chip" hidden>Your system</span></b><small>Raspberry Pi and ARM PCs · aarch64</small></span>
             <span class="opt-size">41 MB</span>
           </button>
+          <button type="button" role="radio" class="opt" data-pick="apk" aria-checked="false" tabindex="-1">
+            <span class="opt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2"/></svg></span>
+            <span class="opt-txt"><b>Android<span class="chip" hidden>Your system</span></b><small>Phones &amp; tablets · Android 10+</small></span>
+            <span class="opt-size">22 MB</span>
+          </button>
         </div>
         <a class="btn dl" id="dlMain" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span id="dlTitle">Download for Windows</span><small id="dlSub">.exe · 56 MB</small></a>
         <div class="ospane" data-pane="windows" role="tabpanel">
@@ -744,7 +849,10 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           </div>
           <p class="req">Ubuntu 22.04+, Debian 12+, Linux Mint and Raspberry Pi OS (64-bit), on Intel/AMD or ARM64, in an X11 (Xorg) session. Not sure which you have? Run <span class="mono">uname -m</span>: x86_64 is Intel/AMD, aarch64 is ARM64. ffmpeg is installed with it. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Wayland the key wheels can't see drags.</p>
         </div>
-        <span class="preview-tag">Early preview · version 0.2.1</span>
+        <div class="ospane" data-pane="android" role="tabpanel" hidden>
+          <p class="req">Android 10 and newer. Bloom isn’t on the Play Store yet, so Android asks once to allow installs from your browser, and Play Protect may ask you to confirm. Bloom needs no permissions and never goes online: share a file to Bloom and the result is saved in Downloads/Bloom. On phones Bloom converts photos, PDFs, videos and audio.</p>
+        </div>
+        <span class="preview-tag">Early preview · version 0.3.0</span>
       </div>
       </div>
     </div>
@@ -761,7 +869,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       <a href="#privacy">Privacy</a>
       <a href="#get">Install</a>
     </nav>
-    <p class="fine">Bloom converts, edits and organises files offline on Windows 10, Windows 11 and Linux.</p>
+    <p class="fine">Bloom converts, edits and organises files offline on Windows 10, Windows 11, Linux and Android.</p>
   </div>
 </footer>
 
@@ -1183,6 +1291,13 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
         { scene: 'tray', d: 4400, installed: true, pop: true, t: 'Bloom is ready', s: 'The Bloom flower appears in the top bar.' },
         tryIt,
       ],
+      android: [
+        { scene: 'adl', d: 5200, t: 'Download Bloom', s: 'Tap the download button on your phone. Bloom.apk is about 22 MB.' },
+        { scene: 'aunk', d: 5000, t: 'Allow the install', s: 'The first time, Android asks. Tap Settings and turn on Allow from this source.' },
+        { scene: 'ainst', d: 4800, t: 'Install', s: 'Tap Install. If Play Protect asks, choose Install anyway. Bloom needs no permissions.' },
+        { scene: 'ashare', d: 4200, t: 'Share a file to Bloom', s: 'In Gallery, Files or WhatsApp, tap Share and pick Bloom.' },
+        { scene: 'awheel', d: 5600, t: 'Tap a petal', s: 'Tap PDF, JPG or any petal. The new file is saved in Downloads/Bloom.' },
+      ],
     };
     const ICON = {
       play: '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>',
@@ -1250,6 +1365,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
     win: { file: 'Bloom-Setup.exe', size: '56 MB', pane: 'windows', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe', title: 'Download for Windows', sub: '.exe · 56 MB' },
     x64: { file: 'bloom_amd64.deb', size: '45 MB', pane: 'linux', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_amd64.deb', title: 'Download for Linux', sub: 'Intel / AMD · 45 MB' },
     arm: { file: 'bloom_arm64.deb', size: '41 MB', pane: 'linux', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/bloom_arm64.deb', title: 'Download for Linux', sub: 'ARM64 · 41 MB' },
+    apk: { file: 'Bloom.apk', size: '22 MB', pane: 'android', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom.apk', title: 'Download for Android', sub: '.apk · 22 MB' },
   };
   const opts = [...document.querySelectorAll('.opt')];
   const pick = (key, focus) => {
@@ -1268,7 +1384,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       if (step) { e.preventDefault(); pick(opts[(i + step + opts.length) % opts.length].dataset.pick, true); }
     });
   });
-  pick(/Linux|X11/i.test(navigator.userAgent) && !/Android/i.test(navigator.userAgent) ? 'x64' : 'win');
+  pick(/Android/i.test(navigator.userAgent) ? 'apk' : /Linux|X11/i.test(navigator.userAgent) ? 'x64' : 'win');
 
   /* ---------------- recommend the right download for this computer ---------------- */
   // Chromium's user agent always says "Linux x86_64", so ask for the real CPU
@@ -1277,7 +1393,8 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
     const ua = navigator.userAgent, uad = navigator.userAgentData;
     const plat = (uad && uad.platform) || navigator.platform || '';
     let os = 'unknown';
-    if ((uad && uad.mobile) || /Android|iPhone|iPad|iPod/i.test(ua)) os = 'mobile';
+    if (/Android/i.test(plat + ua)) os = 'android';
+    else if ((uad && uad.mobile) || /iPhone|iPad|iPod/i.test(ua)) os = 'mobile';
     else if (/Win/i.test(plat) || /Windows/i.test(ua)) os = 'windows';
     else if (/CrOS/i.test(ua) || /Chrome OS/i.test(plat)) os = 'chromeos';
     else if (/Mac/i.test(plat) || /Macintosh/i.test(ua)) os = navigator.maxTouchPoints > 1 ? 'mobile' : 'mac';   // iPadOS says Mac
@@ -1318,8 +1435,11 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       say('Bloom isn’t available for <b>Mac</b> yet. It runs on Windows and Linux.');
     } else if (os === 'chromeos') {
       say('Bloom isn’t available for <b>Chromebooks</b> yet. It runs on Windows and Linux.');
+    } else if (os === 'android') {
+      mine('apk');
+      head.textContent = 'Get Bloom for Android';
     } else if (os === 'mobile') {
-      say('Bloom is a desktop app for <b>Windows and Linux</b>. Open this page on your computer to download it.');
+      say('Bloom isn’t available for <b>iPhone and iPad</b> yet. It runs on Android, Windows and Linux. Open this page on your computer to download it there.');
       const share = document.getElementById('shareBtn');
       share.hidden = false;
       if (navigator.share) share.textContent = 'Send link to my computer';
