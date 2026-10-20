@@ -57,7 +57,10 @@ class WheelView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private val ink = context.getColor(R.color.ink)
     private val glass = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = context.getColor(R.color.glass) }
     private val rim = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE; strokeWidth = 1.5f * dp; color = 0x99FFFFFF.toInt()
+        style = Paint.Style.STROKE; strokeWidth = 1.5f * dp; color = 0x406B4CF6
+    }
+    private val edge = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeWidth = 1.5f * dp; pathEffect = CornerPathEffect(16 * dp)
     }
     private val petalPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         pathEffect = CornerPathEffect(16 * dp)
@@ -218,8 +221,11 @@ class WheelView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
             petalPaint.color = if (hot) accent else petalColor
             petalPaint.alpha = if (dim) alpha / 2 else alpha
             canvas.drawPath(shapes[i], petalPaint)
+            edge.color = if (hot) accent else 0x736B4CF6
+            edge.alpha = if (dim) alpha / 4 else alpha * 0x73 / 255
+            canvas.drawPath(shapes[i], edge)
             val (x, y) = labelCenter(i)
-            val room = if (n == 1) outer else min(2 * ((outer + inner) / 2) * sin(PI / n).toFloat() - 22 * dp, (outer - inner) * 1.45f)
+            val room = if (n == 1) outer else min(2 * ((outer + inner) / 2) * sin(PI / n).toFloat() - 28 * dp, (outer - inner) * 1.2f)
             drawLabel(canvas, petal.label, x, y, room, if (hot) 0xFFFFFFFF.toInt() else ink, if (dim) alpha / 2 else alpha)
             canvas.restore()
         }

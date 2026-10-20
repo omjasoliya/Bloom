@@ -35,7 +35,7 @@
             android:layout_marginTop="6dp"
             android:gravity="center"
             android:lineSpacingExtra="3dp"
-            android:text="Convert photos, PDFs, videos and more\nright on your phone. Nothing is uploaded."
+            android:text="Convert photos, PDFs, videos and more right on your phone. Nothing is uploaded."
             android:textColor="@color/muted"
             android:textSize="16sp" />
 
@@ -76,7 +76,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
-            android:text="Free &amp; open source · Works offline · No permissions"
+            android:gravity="center"
+            android:text="Free &amp; open source · Works offline\nNo permissions needed"
             android:textColor="@color/muted"
             android:textSize="12sp" />
     </LinearLayout>
