@@ -46,7 +46,8 @@ object Updater {
         val assets = json.getJSONArray("assets")
         val apk = (0 until assets.length()).map { assets.getJSONObject(it) }
             .firstOrNull { it.getString("name") == "Bloom.apk" } ?: return null
-        val notes = json.optString("body").lineSequence().map { it.trim().trimStart('-', '*', '#', ' ') }
+        val body = if (json.isNull("body")) "" else json.optString("body")       // GitHub sends null for no notes
+        val notes = body.lineSequence().map { it.trim().trimStart('-', '*', '#', ' ') }
             .firstOrNull { it.isNotEmpty() }.orEmpty()
         return Release(version, notes.take(140), apk.getString("browser_download_url"))
     }

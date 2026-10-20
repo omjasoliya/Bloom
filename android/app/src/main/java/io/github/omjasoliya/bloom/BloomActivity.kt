@@ -416,6 +416,7 @@ class BloomActivity : Activity() {
         noticeNo.setOnClickListener { onNo() }
         if (notice.visibility != View.VISIBLE) {
             notice.visibility = View.VISIBLE
+            notice.post { makeRoomForNotice(notice.height) }
             notice.translationY = -60 * resources.displayMetrics.density
             notice.alpha = 0f
             notice.animate().translationY(0f).alpha(1f).setDuration(240).start()
@@ -424,6 +425,14 @@ class BloomActivity : Activity() {
 
     private fun hideNotice() {
         notice.visibility = View.GONE
+        makeRoomForNotice(0)
+    }
+
+    /** Moves the screen's content below the notice card so nothing hides behind it. */
+    private fun makeRoomForNotice(height: Int) {
+        val gap = if (height > 0) height + (16 * resources.displayMetrics.density).toInt() else 0
+        stage.setPadding(0, gap, 0, 0)
+        home.setPadding(home.paddingLeft, gap + (28 * resources.displayMetrics.density).toInt(), home.paddingRight, home.paddingBottom)
     }
 
     /** Asked once. Until the user answers, Bloom never goes online. */
