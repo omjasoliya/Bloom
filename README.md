@@ -1,4 +1,4 @@
-# Bloom (Windows + Linux)
+# Bloom (Windows + Linux + Android)
 
 Offline file converter with a petal wheel. Start dragging any file, then press a key:
 
@@ -39,6 +39,20 @@ sudo apt install ./dist/bloom_*.deb # install; then open Bloom from your apps
 The .deb installs to `/opt/bloom`, adds Bloom to the app menu, and turns on *Start when I log in* the first
 time it runs. It uses the system's ffmpeg (a dependency). A .deb runs on Linux versions at least as new as the
 one it was built on, so the GitHub Actions build (Ubuntu 22.04) is the one to share.
+
+## Android app
+
+`android/` is a native Kotlin app (Android 10+). Share any file to Bloom from another app (or open Bloom and
+choose files) and a petal wheel offers Convert, Tools and Actions: images to JPG/PNG/WEBP/PDF, PDF pages to
+images, PDF merge/split, video to MP4/M4A, 720p, mute, zip. Results go to Downloads/Bloom. It asks for no
+permissions and has no internet access.
+
+```
+cd android && gradle assembleRelease    # needs JDK 17 and the Android SDK; Gradle 8.10+
+```
+
+GitHub Actions builds `Bloom.apk`, signs it with the `BLOOM_KEYSTORE_B64` / `BLOOM_KEYSTORE_PASSWORD` secrets,
+and tries it on an emulator (`android/ci/emulator-test.sh`). Updates must be signed with the same key.
 
 ## Windows test checklist
 

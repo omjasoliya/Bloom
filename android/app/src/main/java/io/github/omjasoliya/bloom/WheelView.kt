@@ -225,7 +225,7 @@ class WheelView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
             edge.alpha = if (dim) alpha / 4 else alpha * 0x73 / 255
             canvas.drawPath(shapes[i], edge)
             val (x, y) = labelCenter(i)
-            val room = if (n == 1) outer else min(2 * ((outer + inner) / 2) * sin(PI / n).toFloat() - 28 * dp, (outer - inner) * 1.2f)
+            val room = if (n == 1) outer else min(2 * ((outer + inner) / 2) * sin(PI / n).toFloat() - 28 * dp, (outer - inner) * 0.95f)
             drawLabel(canvas, petal.label, x, y, room, if (hot) 0xFFFFFFFF.toInt() else ink, if (dim) alpha / 2 else alpha)
             canvas.restore()
         }

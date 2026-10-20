@@ -1,7 +1,7 @@
 ; Inno Setup script: builds dist\Bloom-Setup.exe from dist\Bloom\
 ; Installs for the current user only (no admin rights needed).
 #define AppName "Bloom"
-#define AppVersion "0.2.1"
+#define AppVersion "0.3.0"
 
 [Setup]
 AppId={{6B4CF6A1-3FCF-4F9F-B10D-B100D0000002}
