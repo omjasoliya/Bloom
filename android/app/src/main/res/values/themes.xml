@@ -10,7 +10,7 @@
         <item name="android:forceDarkAllowed">false</item>
     </style>
 
-    <style name="Bloom.Button">
+    <style name="Bloom.Button" parent="">
         <item name="android:layout_height">52dp</item>
         <item name="android:background">@drawable/button</item>
         <item name="android:gravity">center</item>
@@ -26,7 +26,7 @@
         <item name="android:textColor">@color/ink</item>
     </style>
 
-    <style name="Bloom.Tab">
+    <style name="Bloom.Tab" parent="">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">46dp</item>
         <item name="android:layout_weight">1</item>
