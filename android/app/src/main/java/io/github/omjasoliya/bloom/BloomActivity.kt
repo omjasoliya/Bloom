@@ -44,6 +44,13 @@ class BloomActivity : Activity() {
     private lateinit var openButton: TextView
     private lateinit var shareButton: TextView
     private lateinit var doneButton: TextView
+    private lateinit var notice: View
+    private lateinit var noticeTitle: TextView
+    private lateinit var noticeBody: TextView
+    private lateinit var noticeButtons: View
+    private lateinit var noticeYes: TextView
+    private lateinit var noticeNo: TextView
+    private lateinit var updatesToggle: TextView
 
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
@@ -52,6 +59,7 @@ class BloomActivity : Activity() {
     private var saved = emptyList<Saved>()
     private var fromShare = false
     private var busy = false
+    private var updating = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,6 +82,14 @@ class BloomActivity : Activity() {
         openButton = findViewById(R.id.open)
         shareButton = findViewById(R.id.share)
         doneButton = findViewById(R.id.done)
+        notice = findViewById(R.id.notice)
+        noticeTitle = findViewById(R.id.notice_title)
+        noticeBody = findViewById(R.id.notice_body)
+        noticeButtons = findViewById(R.id.notice_buttons)
+        noticeYes = findViewById(R.id.notice_yes)
+        noticeNo = findViewById(R.id.notice_no)
+        updatesToggle = findViewById(R.id.updates_toggle)
+        updatesToggle.setOnClickListener { setUpdates(Updater.choice(this) != "on") }
 
         thumb.clipToOutline = true
         findViewById<View>(R.id.choose).setOnClickListener { chooseFiles() }
@@ -85,6 +101,7 @@ class BloomActivity : Activity() {
         shareButton.setOnClickListener { share(saved.map { it.uri }, saved.map { it.mime }) }
         doneButton.setOnClickListener { closeResult() }
         handle(intent)
+        if (Updater.due(this)) checkForUpdate(quiet = true)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -167,6 +184,8 @@ class BloomActivity : Activity() {
 
     private fun showHome() {
         inputs = emptyList()
+        showUpdatesToggle()
+        if (Updater.choice(this) == null) askAboutUpdates()
         home.visibility = View.VISIBLE
         stage.visibility = View.GONE
         result.visibility = View.GONE
@@ -294,6 +313,7 @@ class BloomActivity : Activity() {
         shareButton.visibility = if (saved.isNotEmpty()) View.VISIBLE else View.GONE
         doneButton.text = "Done"
         showCard()
+        if (Updater.choice(this) == null) askAboutUpdates()
     }
 
     private fun showError(error: Throwable) {
@@ -378,9 +398,117 @@ class BloomActivity : Activity() {
         else -> null
     }
 
+    // ---- updates ----
+
+    private fun showUpdatesToggle() {
+        updatesToggle.text = if (Updater.choice(this) == "on") "Update check: on · turn off" else "Update check: off · turn on"
+    }
+
+    private fun showNotice(title: String, body: String, yes: String?, no: String?, onYes: () -> Unit = {}, onNo: () -> Unit = {}) {
+        noticeTitle.text = title
+        noticeBody.text = body
+        noticeButtons.visibility = if (yes == null && no == null) View.GONE else View.VISIBLE
+        noticeYes.visibility = if (yes == null) View.GONE else View.VISIBLE
+        noticeNo.visibility = if (no == null) View.GONE else View.VISIBLE
+        noticeYes.text = yes
+        noticeNo.text = no
+        noticeYes.setOnClickListener { onYes() }
+        noticeNo.setOnClickListener { onNo() }
+        if (notice.visibility != View.VISIBLE) {
+            notice.visibility = View.VISIBLE
+            notice.post { makeRoomForNotice(notice.height) }
+            notice.translationY = -60 * resources.displayMetrics.density
+            notice.alpha = 0f
+            notice.animate().translationY(0f).alpha(1f).setDuration(240).start()
+        }
+    }
+
+    private fun hideNotice() {
+        notice.visibility = View.GONE
+        makeRoomForNotice(0)
+    }
+
+    /** Moves the screen's content below the notice card so nothing hides behind it. */
+    private fun makeRoomForNotice(height: Int) {
+        val gap = if (height > 0) height + (16 * resources.displayMetrics.density).toInt() else 0
+        stage.setPadding(0, gap, 0, 0)
+        home.setPadding(home.paddingLeft, gap + (28 * resources.displayMetrics.density).toInt(), home.paddingRight, home.paddingBottom)
+    }
+
+    /** Asked once. Until the user answers, Bloom never goes online. */
+    private fun askAboutUpdates() {
+        showNotice(
+            "Get notified about new versions?",
+            "Bloom would ask GitHub for the latest version number, once a day. Your files never leave your phone. You can change this on Bloom’s home screen.",
+            "Yes, notify me", "No thanks",
+            onYes = { setUpdates(true) },
+            onNo = { setUpdates(false) })
+    }
+
+    private fun setUpdates(on: Boolean) {
+        Updater.setChoice(this, on)
+        showUpdatesToggle()
+        hideNotice()
+        if (on) checkForUpdate(quiet = false) else toast("Bloom won’t check for updates.")
+    }
+
+    /** [quiet]: say nothing unless there is an update (the daily check). */
+    private fun checkForUpdate(quiet: Boolean) {
+        val test = intent?.getStringExtra(EXTRA_TEST_VERSION)
+        Executors.newSingleThreadExecutor().execute {
+            val found = runCatching { Updater.check(this, Updater.currentVersion(this, test)) }
+            main.post {
+                if (isDestroyed) return@post
+                val release = found.getOrNull()
+                when {
+                    release != null -> offerUpdate(release)
+                    quiet -> Unit
+                    found.isFailure -> toast("Couldn’t reach GitHub to check for updates.")
+                    else -> toast("Bloom is up to date.")
+                }
+            }
+        }
+    }
+
+    private fun offerUpdate(release: Release) {
+        showNotice(
+            "Bloom ${release.version} is available",
+            release.notes.ifEmpty { "A new version of Bloom is ready to install." },
+            "Update", "Later",
+            onYes = { installUpdate(release) },
+            onNo = { hideNotice() })
+    }
+
+    private fun installUpdate(release: Release) {
+        if (updating) return
+        updating = true
+        showNotice("Downloading Bloom ${release.version}…", "0%", null, null)
+        Executors.newSingleThreadExecutor().execute {
+            val apk = runCatching {
+                Updater.download(this, release) { p -> main.post { noticeBody.text = "$p%" } }
+            }
+            main.post {
+                updating = false
+                if (isDestroyed) return@post
+                apk.onSuccess {
+                    hideNotice()
+                    try {
+                        startActivity(Updater.installIntent(this, it))
+                    } catch (e: ActivityNotFoundException) {
+                        toast("This phone has no installer for APK files.")
+                    }
+                }.onFailure {
+                    showNotice("Couldn’t download the update", "Check your connection and try again.",
+                        "Try again", "Later", onYes = { installUpdate(release) }, onNo = { hideNotice() })
+                }
+            }
+        }
+    }
+
     private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 
     private companion object {
         const val PICK_FILES = 1
+        const val EXTRA_TEST_VERSION = "io.github.omjasoliya.bloom.TEST_VERSION"   // debug builds only
     }
 }

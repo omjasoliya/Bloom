@@ -1,7 +1,7 @@
 ; Inno Setup script: builds dist\Bloom-Setup.exe from dist\Bloom\
 ; Installs for the current user only (no admin rights needed).
 #define AppName "Bloom"
-#define AppVersion "0.3.1"
+#define AppVersion "0.3.2"
 
 [Setup]
 AppId={{6B4CF6A1-3FCF-4F9F-B10D-B100D0000002}
@@ -43,6 +43,8 @@ Root: HKCU; Subkey: "Software\Classes\Directory\shell\Bloom\command"; ValueType:
 
 [Run]
 Filename: "{app}\Bloom.exe"; Description: "Start Bloom now"; Flags: nowait postinstall skipifsilent
+; After an update from inside Bloom (a silent install), start it again.
+Filename: "{app}\Bloom.exe"; Flags: nowait; Check: WizardSilent
 
 [UninstallRun]
 Filename: "taskkill.exe"; Parameters: "/IM Bloom.exe /F"; Flags: runhidden; RunOnceId: "StopBloom"

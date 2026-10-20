@@ -686,7 +686,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       </div>
       <div class="pcards">
         <div class="pcard bad"><span class="pi"><svg class="ico" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></span><div><h3>Uploading adds risk</h3><p>Your file leaves your computer, so you have to trust how another service stores, processes and deletes it.</p></div></div>
-        <div class="pcard good"><span class="pi"><svg class="ico" viewBox="0 0 24 24"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></span><div><h3>Bloom works locally</h3><p>Conversions, tools and actions run on your own computer. It works offline, behind a firewall, and on files you'd never upload.</p></div></div>
+        <div class="pcard good"><span class="pi"><svg class="ico" viewBox="0 0 24 24"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"/></svg></span><div><h3>Bloom works locally</h3><p>Conversions, tools and actions run on your own computer. It works offline, behind a firewall, and on files you'd never upload. The only thing it ever asks the internet is whether a new version exists, and only if you allow it.</p></div></div>
       </div>
     </div>
   </section>
@@ -880,7 +880,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
           <p class="req">Ubuntu 22.04+, Debian 12+, Linux Mint and Raspberry Pi OS (64-bit), on Intel/AMD or ARM64, in an X11 (Xorg) session. Not sure which you have? Run <span class="mono">uname -m</span>: x86_64 is Intel/AMD, aarch64 is ARM64. ffmpeg is installed with it. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Wayland the key wheels can't see drags.</p>
         </div>
         <div class="ospane" data-pane="android" role="tabpanel" hidden>
-          <p class="req">Android 10 and newer. Bloom isn’t on the Play Store yet, so Android asks once to allow installs from your browser, and Play Protect may ask you to confirm. Bloom needs no permissions and never goes online: share a file to Bloom and the result is saved in Downloads/Bloom. On phones Bloom converts photos, PDFs, videos and audio.</p>
+          <p class="req">Android 10 and newer. Bloom isn’t on the Play Store yet, so Android asks once to allow installs from your browser, and Play Protect may ask you to confirm. Share a file to Bloom and the result is saved in Downloads/Bloom. Bloom works offline; it only goes online to check for new versions, and only if you say yes when it asks. On phones Bloom converts photos, PDFs, videos and audio.</p>
         </div>
         <span class="preview-tag">Early preview · version 0.3.1</span>
       </div>
@@ -1326,7 +1326,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
       android: [
         { scene: 'adl', d: 5200, t: 'Download Bloom', s: 'Tap the download button on your phone. Bloom.apk is about 22 MB.' },
         { scene: 'aunk', d: 5000, t: 'Allow the install', s: 'The first time, Android asks. Tap Settings and turn on Allow from this source.' },
-        { scene: 'ainst', d: 4800, t: 'Install', s: 'Tap Install. If Play Protect asks, choose Install anyway. Bloom needs no permissions.' },
+        { scene: 'ainst', d: 4800, t: 'Install', s: 'Tap Install. If Play Protect asks, choose Install anyway. Bloom can then keep itself up to date if you allow it.' },
         { scene: 'ashare', d: 4200, t: 'Share a file to Bloom', s: 'In Gallery, Files or WhatsApp, tap Share and pick Bloom.' },
         { scene: 'awheel', d: 5600, t: 'Tap a petal', s: 'Tap PDF, JPG or any petal. The new file is saved in Downloads/Bloom.' },
       ],

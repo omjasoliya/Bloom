@@ -77,9 +77,19 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:gravity="center"
-            android:text="Free &amp; open source · Works offline\nNo permissions needed"
+            android:text="Free &amp; open source · Works offline"
             android:textColor="@color/muted"
             android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/updates_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:padding="8dp"
+            android:textColor="@color/accent"
+            android:textSize="13sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <!-- The wheel: there are files -->
@@ -259,6 +269,61 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:text="Done" />
+        </LinearLayout>
+    </LinearLayout>
+    <!-- Asks about update checks once, then tells about new versions -->
+    <LinearLayout
+        android:id="@+id/notice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_margin="16dp"
+        android:background="@drawable/card"
+        android:clickable="true"
+        android:elevation="14dp"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:padding="18dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/notice_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/ink"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/notice_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:lineSpacingExtra="2dp"
+            android:textColor="@color/muted"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/notice_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/notice_yes"
+                style="@style/Bloom.Button"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/notice_no"
+                style="@style/Bloom.Button.Quiet"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>
