@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://takebloom.vercel.app/sitemap.xml
