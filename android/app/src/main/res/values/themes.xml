@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Bloom" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+
+    <style name="Bloom.Button" parent="">
+        <item name="android:layout_height">52dp</item>
+        <item name="android:background">@drawable/button</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/on_accent</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="Bloom.Button.Quiet">
+        <item name="android:background">@drawable/button_quiet</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+
+    <style name="Bloom.Tab" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">46dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/tab</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+</resources>

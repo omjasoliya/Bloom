@@ -1,0 +1,338 @@
+package io.github.omjasoliya.bloom
+
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ComponentName
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Parcelable
+import android.util.Size
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import java.util.concurrent.Executors
+import kotlin.math.max
+import kotlin.math.min
+
+/** Home screen when opened from the launcher; the petal wheel once there are files
+ *  (picked here, or shared from another app with Share → Bloom). */
+class BloomActivity : Activity() {
+    private lateinit var home: View
+    private lateinit var stage: View
+    private lateinit var wheel: WheelView
+    private lateinit var thumb: ImageView
+    private lateinit var thumbExt: TextView
+    private lateinit var fileName: TextView
+    private lateinit var fileInfo: TextView
+    private lateinit var hint: TextView
+    private lateinit var tabs: Map<String, TextView>
+    private lateinit var result: View
+    private lateinit var resultTitle: TextView
+    private lateinit var resultBody: TextView
+    private lateinit var openButton: TextView
+    private lateinit var shareButton: TextView
+    private lateinit var doneButton: TextView
+
+    private val worker = Executors.newSingleThreadExecutor()
+    private val main = Handler(Looper.getMainLooper())
+    private var inputs = emptyList<Input>()
+    private var mode = "convert"
+    private var saved = emptyList<Saved>()
+    private var fromShare = false
+    private var busy = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_bloom)
+        home = findViewById(R.id.home)
+        stage = findViewById(R.id.stage)
+        wheel = findViewById(R.id.wheel)
+        thumb = findViewById(R.id.thumb)
+        thumbExt = findViewById(R.id.thumb_ext)
+        fileName = findViewById(R.id.file_name)
+        fileInfo = findViewById(R.id.file_info)
+        hint = findViewById(R.id.hint)
+        tabs = mapOf(
+            "convert" to findViewById(R.id.tab_convert),
+            "tools" to findViewById(R.id.tab_tools),
+            "actions" to findViewById(R.id.tab_actions))
+        result = findViewById(R.id.result)
+        resultTitle = findViewById(R.id.result_title)
+        resultBody = findViewById(R.id.result_body)
+        openButton = findViewById(R.id.open)
+        shareButton = findViewById(R.id.share)
+        doneButton = findViewById(R.id.done)
+
+        thumb.clipToOutline = true
+        findViewById<View>(R.id.choose).setOnClickListener { chooseFiles() }
+        findViewById<View>(R.id.close).setOnClickListener { leave() }
+        tabs.forEach { (m, tab) -> tab.setOnClickListener { showMode(m) } }
+        wheel.onPick = ::pick
+        wheel.onCenter = ::leave
+        openButton.setOnClickListener { saved.singleOrNull()?.let(::open) }
+        shareButton.setOnClickListener { share(saved.map { it.uri }, saved.map { it.mime }) }
+        doneButton.setOnClickListener { closeResult() }
+        handle(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handle(intent)
+    }
+
+    override fun onDestroy() {
+        worker.shutdown()
+        super.onDestroy()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        when {
+            result.visibility == View.VISIBLE && !busy -> closeResult()
+            stage.visibility == View.VISIBLE && !fromShare -> showHome()
+            else -> @Suppress("DEPRECATION") super.onBackPressed()
+        }
+    }
+
+    private fun handle(intent: Intent?) {
+        val uris = sharedUris(intent)
+        if (uris.isNotEmpty()) {
+            fromShare = true
+            load(uris)
+        } else {
+            if (intent?.action == Intent.ACTION_SEND) toast("Bloom works with files: share a photo, PDF, video or any other file.")
+            showHome()
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun sharedUris(intent: Intent?): List<Uri> {
+        intent ?: return emptyList()
+        val uris = mutableListOf<Uri>()
+        when (intent.action) {
+            Intent.ACTION_SEND -> (intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri)?.let { uris += it }
+            Intent.ACTION_SEND_MULTIPLE ->
+                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)?.forEach { if (it is Uri) uris += it }
+            else -> return emptyList()
+        }
+        if (uris.isEmpty()) intent.clipData?.let { clip ->
+            for (i in 0 until clip.itemCount) clip.getItemAt(i).uri?.let { uris += it }
+        }
+        return uris.distinct()
+    }
+
+    private fun chooseFiles() {
+        val pick = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            .addCategory(Intent.CATEGORY_OPENABLE)
+            .setType("*/*")
+            .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+        @Suppress("DEPRECATION")
+        startActivityForResult(pick, PICK_FILES)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != PICK_FILES || resultCode != RESULT_OK || data == null) return
+        val uris = mutableListOf<Uri>()
+        data.clipData?.let { clip -> for (i in 0 until clip.itemCount) clip.getItemAt(i).uri?.let { uris += it } }
+        if (uris.isEmpty()) data.data?.let { uris += it }
+        if (uris.isNotEmpty()) {
+            fromShare = false
+            load(uris)
+        }
+    }
+
+    private fun load(uris: List<Uri>) {
+        worker.execute {
+            val list = uris.mapNotNull { runCatching { Input.from(this, it) }.getOrNull() }
+            main.post { if (!isDestroyed) showFiles(list) }
+        }
+    }
+
+    private fun showHome() {
+        inputs = emptyList()
+        home.visibility = View.VISIBLE
+        stage.visibility = View.GONE
+        result.visibility = View.GONE
+    }
+
+    private fun showFiles(list: List<Input>) {
+        if (list.isEmpty()) {
+            toast("Bloom couldn't open that file.")
+            if (fromShare) finish() else showHome()
+            return
+        }
+        inputs = list
+        fileName.text = list.singleOrNull()?.name ?: "${list.size} files"
+        val total = if (list.any { it.size < 0 }) "" else humanSize(list.sumOf { it.size })
+        fileInfo.text = listOf(total, "stays on your phone").filter { it.isNotEmpty() }.joinToString(" · ")
+        loadThumb(list[0])
+        home.visibility = View.GONE
+        stage.visibility = View.VISIBLE
+        result.visibility = View.GONE
+        showMode(Engine.MODES.firstOrNull { Engine.petals(it, list).isNotEmpty() } ?: "actions")
+    }
+
+    private fun showMode(m: String) {
+        if (busy) return
+        mode = m
+        tabs.forEach { (key, tab) ->
+            val has = Engine.petals(key, inputs).isNotEmpty()
+            tab.isEnabled = has
+            tab.alpha = if (has) 1f else 0.35f
+            tab.isSelected = key == m
+            tab.setTextColor(getColor(if (key == m) R.color.on_accent else R.color.ink))
+        }
+        wheel.setPetals(Engine.petals(m, inputs))
+        val total = inputs.sumOf { max(0L, it.size) }
+        wheel.label = listOf(Engine.TITLES.getValue(m), if (total > 0) humanSize(total) else "").filter { it.isNotEmpty() }.joinToString(" · ")
+        hint.text = when (m) {
+            "convert" -> "Tap a format. The new file goes to ${Downloads.WHERE}."
+            "tools" -> "Tap a tool. Your original file isn't changed."
+            else -> "Tap an action."
+        }
+    }
+
+    private fun pick(petal: Petal) {
+        if (busy) return
+        val m = mode
+        if (m == "actions" && petal.key == "share") return share(inputs.map { it.uri }, inputs.map { it.mime })
+        if (m == "actions" && petal.key == "name") {
+            val names = inputs.joinToString("\n") { it.name }
+            getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("File name", names))
+            toast(if (inputs.size == 1) "Copied the file name" else "Copied ${inputs.size} file names")
+            return
+        }
+        busy = true
+        wheel.setBusy(petal)
+        hint.text = when (m) {
+            "convert" -> "Converting to ${petal.label}…"
+            else -> "${petal.label}…"
+        }
+        val files = inputs
+        worker.execute {
+            val outcome = runCatching {
+                Engine.run(this, m, petal.key, files) { p -> main.post { wheel.progress = p.coerceIn(0, 100) } }
+            }
+            main.post {
+                if (isDestroyed) return@post
+                busy = false
+                wheel.setBusy(null)
+                outcome.onSuccess(::showResult).onFailure(::showError)
+            }
+        }
+    }
+
+    private fun showResult(outcome: Outcome) {
+        saved = outcome.saved
+        resultTitle.text = "✓  ${outcome.title}"
+        resultBody.text = when (saved.size) {
+            0 -> "Nothing to save."
+            1 -> "Saved ${saved[0].name}\nin ${Downloads.WHERE}"
+            else -> "Saved ${saved.size} files in ${Downloads.WHERE}"
+        }
+        openButton.visibility = if (saved.size == 1) View.VISIBLE else View.GONE
+        shareButton.visibility = if (saved.isNotEmpty()) View.VISIBLE else View.GONE
+        doneButton.text = "Done"
+        showCard()
+    }
+
+    private fun showError(error: Throwable) {
+        saved = emptyList()
+        resultTitle.text = "Bloom couldn't finish that"
+        resultBody.text = when (error) {
+            is OutOfMemoryError -> "This file is too big to handle on this phone."
+            else -> (error.message ?: error.javaClass.simpleName).take(300)
+        }
+        openButton.visibility = View.GONE
+        shareButton.visibility = View.GONE
+        doneButton.text = "Back"
+        showCard()
+    }
+
+    private fun showCard() {
+        showMode(mode)
+        result.visibility = View.VISIBLE
+        result.translationY = 80 * resources.displayMetrics.density
+        result.alpha = 0f
+        result.animate().translationY(0f).alpha(1f).setDuration(260).start()
+    }
+
+    /** Done: back to the app that shared the files. Back: try something else. */
+    private fun closeResult() {
+        result.visibility = View.GONE
+        if (saved.isNotEmpty() && fromShare) finish()
+    }
+
+    private fun leave() {
+        if (busy) return
+        if (fromShare) finish() else showHome()
+    }
+
+    private fun open(file: Saved) {
+        val view = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(file.uri, file.mime)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        try {
+            startActivity(view)
+        } catch (e: ActivityNotFoundException) {
+            toast("No app on this phone opens ${file.name.substringAfterLast('.').uppercase()} files.")
+        }
+    }
+
+    private fun share(uris: List<Uri>, mimes: List<String>) {
+        if (uris.isEmpty()) return
+        val type = mimes.distinct().singleOrNull()
+            ?: mimes.map { it.substringBefore('/') }.distinct().singleOrNull()?.let { "$it/*" } ?: "*/*"
+        val send = if (uris.size == 1) Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris[0])
+        else Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        send.type = type
+        send.clipData = ClipData.newRawUri(null, uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
+        send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val chooser = Intent.createChooser(send, null)
+            .putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, arrayOf(ComponentName(this, BloomActivity::class.java)))
+        startActivity(chooser)
+    }
+
+    private fun loadThumb(input: Input) {
+        thumb.setImageDrawable(null)
+        thumbExt.text = input.ext.uppercase().take(4).ifEmpty { "FILE" }
+        thumbExt.visibility = View.VISIBLE
+        val px = (64 * resources.displayMetrics.density).toInt()
+        worker.execute {
+            val bitmap = runCatching { thumbnailFor(input, px) }.getOrNull()
+            main.post {
+                if (bitmap != null && !isDestroyed && inputs.firstOrNull() === input) {
+                    thumb.setImageBitmap(bitmap)
+                    thumbExt.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    private fun thumbnailFor(input: Input, px: Int): Bitmap? = when {
+        input.kind == Kind.IMAGE -> ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, input.uri)) { d, info, _ ->
+            d.setTargetSampleSize(max(1, min(info.size.width, info.size.height) / px))
+        }
+        input.uri.scheme == "content" && (input.kind == Kind.VIDEO || input.kind == Kind.PDF) ->
+            contentResolver.loadThumbnail(input.uri, Size(px, px), null)
+        else -> null
+    }
+
+    private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+
+    private companion object {
+        const val PICK_FILES = 1
+    }
+}

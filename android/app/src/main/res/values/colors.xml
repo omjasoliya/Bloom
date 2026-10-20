@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The website's palette -->
+    <color name="bg">#F3F6F1</color>
+    <color name="ink">#142019</color>
+    <color name="muted">#56685D</color>
+    <color name="accent">#6B4CF6</color>
+    <color name="accent_deep">#5535E0</color>
+    <color name="on_accent">#FFFFFF</color>
+    <color name="petal">#FFFFFF</color>
+    <color name="soft">#ECE8FF</color>
+    <color name="glass">#1F6B4CF6</color>
+    <color name="line">#1F142019</color>
+    <color name="flower">#7B5CFF</color>
+    <color name="mint">#43CFA0</color>
+    <color name="icon_bg">#F1EDFF</color>
+</resources>

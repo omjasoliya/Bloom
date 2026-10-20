@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Bloom flower -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp" android:viewportWidth="64" android:viewportHeight="64">
+    <group android:pivotX="32" android:pivotY="32" android:rotation="0">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <group android:pivotX="32" android:pivotY="32" android:rotation="45">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <group android:pivotX="32" android:pivotY="32" android:rotation="90">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <group android:pivotX="32" android:pivotY="32" android:rotation="135">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <group android:pivotX="32" android:pivotY="32" android:rotation="180">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <group android:pivotX="32" android:pivotY="32" android:rotation="225">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <group android:pivotX="32" android:pivotY="32" android:rotation="270">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <group android:pivotX="32" android:pivotY="32" android:rotation="315">
+        <path android:pathData="M32,32 L32,12" android:strokeColor="@color/flower"
+            android:strokeLineCap="round" android:strokeWidth="16" />
+    </group>
+    <path android:fillColor="@color/mint" android:pathData="M21,32a11,11 0 1,0 22,0a11,11 0 1,0 -22,0" />
+</vector>
