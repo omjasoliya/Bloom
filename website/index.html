@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="only light">
 <title>Bloom · Drag. Tap a key. Done.</title>
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,20 +33,7 @@
   --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --hand: "Caveat", "Comic Sans MS", cursive;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e1411; --surface: #16201b; --soft: #1c2721; --ink: #edf4ef; --muted: #a2b5a9;
-    --line: rgba(237, 244, 239, .14); --accent: #8b72ff; --accent-deep: #7357ff; --risk: #ff7a70;
-    --stage-dim: rgba(6, 10, 20, .30); --cap-top: #2a352f; --cap-side: #121915; --cap-ink: #dfe9e2;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0e1411; --surface: #16201b; --soft: #1c2721; --ink: #edf4ef; --muted: #a2b5a9;
-  --line: rgba(237, 244, 239, .14); --accent: #8b72ff; --accent-deep: #7357ff; --risk: #ff7a70;
-  --stage-dim: rgba(6, 10, 20, .30); --cap-top: #2a352f; --cap-side: #121915; --cap-ink: #dfe9e2;
-  color-scheme: dark;
+  color-scheme: light;          /* the site is light only, also when the system is in dark mode */
 }
 
 * { box-sizing: border-box; }
@@ -297,6 +285,16 @@ header.site .wrap { display: flex; align-items: center; gap: 24px; padding-block
 .dl small { font-weight: 500; opacity: .78; font-size: .82rem; margin-left: 2px; white-space: nowrap; }
 #dlTitle { white-space: nowrap; }
 @media (max-width: 480px) { .dl small { display: none; } }
+.qrsend { display: flex; align-items: center; gap: 16px; padding: 14px; border: 1px solid var(--accent); border-radius: 8px; background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+.qrsend[hidden], .dl[hidden] { display: none; }
+.qr { flex: none; width: 112px; height: 112px; padding: 4px; background: #fff; border-radius: 6px; }
+.qr svg { display: block; width: 100%; height: 100%; }
+.qrtxt { display: grid; gap: 4px; font-size: .9rem; line-height: 1.45; }
+.qrtxt small { color: var(--muted); font-size: .84rem; }
+.qrtxt a { color: var(--accent); font-weight: 700; font-size: .86rem; }
+.awaynote { margin: -4px 0 0; text-align: center; font-size: .86rem; color: var(--muted); line-height: 1.5; }
+.awaynote[hidden] { display: none; }
+.awaynote a { color: var(--accent); font-weight: 700; white-space: nowrap; }
 .detect { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; border: 1px solid var(--line); background: var(--soft); border-radius: 8px; padding: 10px 14px; font-size: .9rem; line-height: 1.45; }
 .detect[hidden] { display: none; }
 .detect .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
@@ -864,7 +862,12 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
             <span class="opt-size">22 MB</span>
           </button>
         </div>
-        <a class="btn dl" id="dlMain" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span id="dlTitle">Download for Windows</span><small id="dlSub">.exe · 56 MB</small></a>
+        <a class="btn dl" id="dlMain" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom-Setup.exe"><svg class="ico" viewBox="0 0 24 24"><path id="dlIco" d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span id="dlTitle">Download for Windows</span><small id="dlSub">.exe · 56 MB</small></a>
+        <div class="qrsend" id="qrSend" hidden>
+          <span class="qr"><svg viewBox="-2 -2 33 33" shape-rendering="crispEdges" role="img" aria-label="QR code for takebloom.vercel.app"><path stroke="#142019" d="M0 0.5h7m1 0h2m2 0h1m2 0h4m3 0h7m-29 1h1m5 0h1m1 0h1m2 0h1m4 0h1m2 0h1m2 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m5 0h2m5 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m4 0h2m3 0h2m2 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h3m1 0h2m2 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m8 0h3m4 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-20 1h2m2 0h1m1 0h2m1 0h1m1 0h1m-21 1h1m2 0h6m3 0h2m2 0h6m2 0h1m1 0h3m-27 1h1m1 0h1m2 0h1m2 0h1m2 0h1m2 0h4m3 0h2m1 0h2m-25 1h2m1 0h2m2 0h4m1 0h1m5 0h1m2 0h1m1 0h1m-20 1h1m2 0h4m2 0h3m1 0h1m3 0h2m2 0h1m-29 1h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h2m2 0h2m1 0h2m4 0h1m-28 1h1m3 0h1m2 0h1m4 0h2m3 0h1m3 0h7m-28 1h1m2 0h1m1 0h1m1 0h1m3 0h2m1 0h2m1 0h2m3 0h1m2 0h1m1 0h1m-29 1h1m1 0h1m1 0h1m2 0h1m1 0h2m1 0h1m6 0h1m2 0h1m3 0h1m1 0h1m-26 1h2m1 0h1m1 0h1m2 0h2m1 0h3m6 0h1m1 0h1m-26 1h2m3 0h1m1 0h1m2 0h1m2 0h3m1 0h1m1 0h2m3 0h1m1 0h2m-28 1h2m2 0h1m1 0h1m1 0h4m3 0h1m1 0h4m3 0h2m2 0h1m-29 1h2m5 0h2m5 0h1m1 0h1m1 0h1m2 0h2m1 0h3m-27 1h2m2 0h3m1 0h3m2 0h5m2 0h8m-20 1h2m2 0h1m1 0h2m4 0h1m3 0h2m-26 1h7m1 0h2m2 0h1m1 0h7m1 0h1m1 0h2m-26 1h1m5 0h1m1 0h5m1 0h2m1 0h2m1 0h1m3 0h1m2 0h2m-29 1h1m1 0h3m1 0h1m1 0h1m3 0h5m1 0h8m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h1m6 0h4m1 0h2m6 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m3 0h3m1 0h1m2 0h2m1 0h2m1 0h3m-29 1h1m5 0h1m5 0h5m4 0h1m2 0h3m1 0h1m-29 1h7m1 0h1m2 0h1m1 0h3m2 0h3m1 0h1m1 0h2"/></svg></span>
+          <span class="qrtxt"><b>Scan to get Bloom on your phone</b><small>Point your phone’s camera here. This page opens with the Android download ready.</small><a id="qrAnyway" href="https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom.apk">Or download the .apk here</a></span>
+        </div>
+        <p class="awaynote" id="awayNote" hidden><span id="awayText"></span> <a id="awayLink" href="">Download anyway</a></p>
         <div class="ospane" data-pane="windows" role="tabpanel">
           <p class="req">Windows 10 and 11, 64-bit. ffmpeg comes built in. Install LibreOffice (free) to convert documents, spreadsheets and slides. On Windows 11, Open in Bloom sits under Show more options.</p>
         </div>
@@ -1395,12 +1398,40 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; j
     apk: { file: 'Bloom.apk', size: '22 MB', pane: 'android', href: 'https://github.com/omjasoliya/Bloom/releases/latest/download/Bloom.apk', title: 'Download for Android', sub: '.apk · 22 MB' },
   };
   const opts = [...document.querySelectorAll('.opt')];
+  // On a phone, a download that can't run there (the PC versions, or the APK on an
+  // iPhone) becomes "Send to my computer"; the file itself stays one tap away.
+  const UA = navigator.userAgent;
+  const ON_ANDROID = /Android/i.test(UA);
+  const ON_PHONE = ON_ANDROID || /iPhone|iPad|iPod/i.test(UA) || !!(navigator.userAgentData && navigator.userAgentData.mobile)
+    || (/Macintosh/i.test(UA) && navigator.maxTouchPoints > 1);
+  const NAMES = { win: 'Windows', x64: 'Linux', arm: 'Linux ARM64', apk: 'Android' };
+  const ICO_DL = 'M12 4v11M7 10l5 5 5-5M5 20h14', ICO_SEND = 'M22 2L11 13M22 2l-7 20-4-9-9-4z';
+  const dlMain = document.getElementById('dlMain');
+  dlMain.addEventListener('click', async e => {
+    if (!dlMain.dataset.send) return;
+    e.preventDefault();
+    const url = location.href.split('#')[0] + '#get';
+    try {
+      if (navigator.share) await navigator.share({ title: 'Bloom', text: 'Bloom for my computer', url });
+      else { await navigator.clipboard.writeText(url); document.getElementById('dlTitle').textContent = 'Link copied'; }
+    } catch (err) { /* share sheet closed */ }
+  });
   const pick = (key, focus) => {
     const d = DOWNLOADS[key];
     opts.forEach(o => { const on = o.dataset.pick === key; o.setAttribute('aria-checked', on); o.tabIndex = on ? 0 : -1; if (on && focus) o.focus(); });
-    document.getElementById('dlMain').href = d.href;
-    document.getElementById('dlTitle').textContent = d.title;
-    document.getElementById('dlSub').textContent = d.sub;
+    const away = ON_PHONE && !(key === 'apk' && ON_ANDROID);
+    dlMain.href = d.href;
+    if (away) dlMain.dataset.send = '1'; else delete dlMain.dataset.send;
+    document.getElementById('dlIco').setAttribute('d', away ? ICO_SEND : ICO_DL);
+    document.getElementById('dlTitle').textContent = away ? (key === 'apk' ? 'Share the link' : 'Send to my computer') : d.title;
+    document.getElementById('dlSub').textContent = away ? 'share the link' : d.sub;
+    document.getElementById('awayNote').hidden = !away;
+    document.getElementById('awayText').textContent = `This is the ${NAMES[key]} version. It won’t run on this ${ON_ANDROID ? 'phone' : 'device'}.`;
+    document.getElementById('awayLink').href = d.href;
+    // On a computer the Android app goes to the phone with a QR code instead of a download.
+    const qr = !ON_PHONE && key === 'apk';
+    dlMain.hidden = qr;
+    document.getElementById('qrSend').hidden = !qr;
     document.querySelectorAll('.ospane').forEach(p => p.hidden = p.dataset.pane !== d.pane);
     player.show(d);
   };
