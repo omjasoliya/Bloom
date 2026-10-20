@@ -53,6 +53,14 @@ max_size() {   # max_size <file in Downloads/Bloom> <bytes>
   echo "$1: $n bytes (limit $2)"; [ "$n" -le "$2" ]
 }
 
+close_result() {   # Done closes Bloom; let it finish before the next share arrives
+  tap Done
+  for _ in $(seq 1 10); do
+    adb shell dumpsys activity activities | grep -q "topResumedActivity.*$PKG" || return 0
+    sleep 1
+  done
+}
+
 share() {   # share <file> <mime>
   adb shell am start -W -a android.intent.action.SEND -t "$2" \
     --eu android.intent.extra.STREAM "file:///data/user/0/$PKG/files/$1" -n "$PKG/.BloomActivity" > /dev/null
@@ -75,21 +83,21 @@ shot 02-photo-convert
 tap PDF
 expect test-photo.pdf
 shot 03-photo-to-pdf
-tap Done
+close_result
 
 share test-photo.jpg image/jpeg
 tap Tools
 shot 04-photo-tools
 tap Compress
 expect test-photo-small.jpg
-tap Done
+close_result
 
 share test-photo.jpg image/jpeg
 tap Actions
 shot 05-photo-actions
 tap Zip
 expect test-photo.zip
-tap Done
+close_result
 
 # Fit size: a preset, then Custom with exact dimensions (typed into the dialog)
 share test-photo.jpg image/jpeg
@@ -100,7 +108,7 @@ tap "20 KB"
 expect test-photo-20kb.jpg
 shot 12-fit-done
 max_size test-photo-20kb.jpg 20480
-tap Done
+close_result
 
 share test-photo.jpg image/jpeg
 tap Tools
@@ -120,7 +128,7 @@ adb pull /sdcard/Download/Bloom/test-photo-15kb.jpg "$OUT/" > /dev/null
 python3 -c "import struct,sys; d=open(sys.argv[1],'rb').read(); i=2
 while d[i+1] not in (0xC0, 0xC2): i += 2 + struct.unpack('>H', d[i+2:i+4])[0]
 h, w = struct.unpack('>HH', d[i+5:i+9]); print('custom fit:', w, 'x', h); assert (w, h) == (200, 230)" "$OUT/test-photo-15kb.jpg"
-tap Done
+close_result
 
 share test-doc.pdf application/pdf
 shot 06-pdf-convert
@@ -128,27 +136,27 @@ tap JPG
 expect test-doc-p1.jpg
 expect test-doc-p2.jpg
 shot 07-pdf-to-jpg
-tap Done
+close_result
 
 share test-doc.pdf application/pdf
 tap Tools
 tap "Split pages"
 expect test-doc-p1.pdf
 expect test-doc-p2.pdf
-tap Done
+close_result
 
 share test-clip.mp4 video/mp4
 shot 08-video-convert
 tap M4A
 expect test-clip.m4a
 shot 09-video-to-m4a
-tap Done
+close_result
 
 share test-clip.mp4 video/mp4
 tap Tools
 tap Mute
 expect test-clip-muted.mp4
-tap Done
+close_result
 
 adb shell ls -la /sdcard/Download/Bloom/ | tee "$OUT/outputs.txt"
 
