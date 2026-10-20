@@ -120,15 +120,21 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
+      # This version's section of CHANGELOG.md becomes the release notes (Bloom shows the first line).
+      - run: awk -v v="## ${GITHUB_REF_NAME#v}" '$0 == v {on = 1; next} /^## / {on = 0} on' src/CHANGELOG.md > notes.md && cat notes.md
       # A fixed name too, so the website can always link to .../releases/latest/download/bloom_amd64.deb
       - run: |
           cp bloom_*_amd64.deb bloom_amd64.deb
           cp bloom_*_arm64.deb bloom_arm64.deb
       - uses: softprops/action-gh-release@v2
         with:
+          body_path: notes.md
           files: |
             Bloom-Setup.exe
             Bloom.apk

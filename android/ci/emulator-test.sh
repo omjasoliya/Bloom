@@ -37,6 +37,16 @@ PY
   echo "Couldn't find '$1' on screen"; return 1
 }
 
+# Waits up to $2 seconds for text $1 on screen.
+wait_for() {
+  for _ in $(seq 1 "$2"); do
+    adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 || true
+    adb shell cat /sdcard/ui.xml 2>/dev/null | grep -q "text=\"$1\"" && return 0
+    sleep 1
+  done
+  echo "never saw '$1'"; return 1
+}
+
 # Waits for Downloads/Bloom/$1 to appear.
 expect() {
   for _ in $(seq 1 90); do
@@ -159,6 +169,23 @@ expect test-clip-muted.mp4
 close_result
 
 adb shell ls -la /sdcard/Download/Bloom/ | tee "$OUT/outputs.txt"
+
+# Updates: pretend to be an old Bloom, say yes to update checks, and follow
+# the offer to Android's installer (which then asks to allow installs from Bloom).
+adb shell am start -W -n "$PKG/.BloomActivity" --es io.github.omjasoliya.bloom.TEST_VERSION 0.1.0 > /dev/null
+shot 14-ask-updates
+tap "Yes, notify me"
+wait_for Update 60
+shot 15-update-offer
+tap Update
+for _ in $(seq 1 120); do
+  adb shell dumpsys activity activities | grep -q "topResumedActivity.*packageinstaller" && break
+  sleep 1
+done
+shot 16-installer
+adb shell dumpsys activity activities | grep "topResumedActivity" | tee "$OUT/installer.txt" | grep -q packageinstaller
+echo "ok: update reached Android's installer"
+adb shell input keyevent BACK
 
 # The signed release build installs and opens too.
 adb uninstall "$PKG" > /dev/null

@@ -14,10 +14,10 @@ from pathlib import Path
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QCursor, QGuiApplication, QIcon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-from PySide6.QtWidgets import (QApplication, QDialog, QDialogButtonBox, QFormLayout, QLabel, QMenu, QSpinBox,
-                               QSystemTrayIcon)
+from PySide6.QtWidgets import (QApplication, QDialog, QDialogButtonBox, QFormLayout, QLabel, QMenu, QMessageBox,
+                               QSpinBox, QSystemTrayIcon)
 
-from . import converters, inputstate, tools
+from . import converters, inputstate, tools, updates
 from . import platform_utils as pu
 from .wheel import Wheel
 
@@ -263,6 +263,101 @@ class PickCollector(QObject):
         self.jobs.run(mode, key, paths)
 
 
+class Updater(QObject):
+    """The optional update check (asked once) and installing a new version."""
+    found = Signal(dict)
+    told = Signal(str, str)            # title, body (from the worker thread)
+    downloaded = Signal(str)
+
+    def __init__(self, settings, notify):
+        super().__init__()
+        self.settings, self.notify, self.release = settings, notify, None
+        self.timer = QTimer(self, interval=6 * 60 * 60 * 1000, timeout=lambda: self.check(quiet=True))
+        self.found.connect(self.on_found)
+        self.told.connect(self.notify)
+        self.downloaded.connect(self.on_downloaded)
+        self.on_found_hook = lambda release: None
+
+    @property
+    def enabled(self):
+        return self.settings.get("updates") == "on"
+
+    def ask_once(self):
+        if self.settings.get("updates"):
+            return
+        box = QMessageBox(QMessageBox.Question, "Bloom",
+                          "Get notified about new versions of Bloom?\n\n"
+                          "Bloom would ask GitHub for the latest version number, once a day. "
+                          "Your files never leave your computer. You can change this in the tray menu.")
+        yes = box.addButton("Yes, notify me", QMessageBox.YesRole)
+        box.addButton("No thanks", QMessageBox.NoRole)
+        box.setWindowFlag(Qt.WindowStaysOnTopHint)
+        box.exec()
+        self.set_enabled(box.clickedButton() is yes)
+
+    def set_enabled(self, on):
+        self.settings["updates"] = "on" if on else "off"
+        self.settings["checked"] = 0
+        save_settings(self.settings)
+        if on:
+            self.check(quiet=False)
+            self.timer.start()
+        else:
+            self.timer.stop()
+
+    def start(self):
+        if self.enabled:
+            self.timer.start()
+            self.check(quiet=True)
+
+    def check(self, quiet):
+        """quiet: only checks once a day and says nothing unless there's an update."""
+        if quiet and time.time() - self.settings.get("checked", 0) < updates.DAY:
+            return
+        self.settings["checked"] = time.time()
+        save_settings(self.settings)
+
+        def work():
+            try:
+                release = updates.check()
+            except Exception as err:
+                if not quiet:
+                    self.told.emit("Bloom couldn't check for updates", f"GitHub couldn't be reached ({err.__class__.__name__}).")
+                return
+            if release:
+                self.found.emit(release)
+            elif not quiet:
+                self.told.emit("Bloom is up to date", f"You have the latest version, {updates.__version__}.")
+        threading.Thread(target=work, daemon=True).start()
+
+    def on_found(self, release):
+        self.release = release
+        self.notify(f"Bloom {release['version']} is available",
+                    (release["notes"] + "\n" if release["notes"] else "") + "Click here, or choose Update in the tray menu.")
+        self.on_found_hook(release)
+
+    def update(self):
+        if not self.release:
+            return
+        self.notify(f"Downloading Bloom {self.release['version']}…", "Bloom restarts by itself when it's done."
+                    if pu.IS_WINDOWS else "The installer opens when it's done.")
+        release = self.release
+
+        def work():
+            try:
+                self.downloaded.emit(updates.download(release))
+            except Exception as err:
+                self.told.emit("Bloom couldn't update", f"The download didn't finish ({err.__class__.__name__}). Try again later.")
+        threading.Thread(target=work, daemon=True).start()
+
+    def on_downloaded(self, path):
+        updates.install(path)
+        if pu.IS_WINDOWS:
+            QApplication.quit()             # the installer replaces Bloom and starts it again
+        else:
+            self.notify("Install the new Bloom", "The installer has opened. After installing, open Bloom again.")
+
+
 def load_settings():
     try:
         return json.loads(SETTINGS.read_text())
@@ -365,6 +460,22 @@ def main():
         ctx.setChecked(pu.context_menu_enabled())
         ctx.toggled.connect(pu.set_context_menu)
         menu.addAction(ctx)
+    updater = Updater(settings, notify)
+    check_updates = QAction("Notify me about updates")
+    check_updates.setCheckable(True)
+    check_updates.setChecked(updater.enabled)
+    check_updates.toggled.connect(updater.set_enabled)
+    menu.addAction(check_updates)
+    update_now = QAction("Update Bloom")
+    update_now.setVisible(False)
+    update_now.triggered.connect(updater.update)
+
+    def show_update(release):
+        update_now.setText(f"Update to Bloom {release['version']}")
+        update_now.setVisible(True)
+    updater.on_found_hook = show_update
+    menu.insertAction(status, update_now)
+    tray.messageClicked.connect(lambda: updater.update() if updater.release else None)
     howto = QAction("How to use Bloom")
     howto.triggered.connect(lambda: notify(
         "How to use Bloom", "Start dragging a file, then press Shift to convert, Ctrl for tools or "
@@ -386,6 +497,11 @@ def main():
             "Bloom is running", "Start dragging a file, then press Shift, Ctrl or Alt."))
     if pick:
         picker.add(pick)
+    if settings.get("updates"):
+        updater.start()
+    else:                               # ask once, after Bloom has settled in
+        QTimer.singleShot(4000, lambda: (updater.ask_once(), check_updates.setChecked(updater.enabled)))
 
-    app._keep = (tray, menu, watcher, picker, server, jobs, status, login, howto, quit_action)
+    app._keep = (tray, menu, watcher, picker, server, jobs, status, login, howto, quit_action, updater, check_updates,
+                 update_now)
     return app.exec()
