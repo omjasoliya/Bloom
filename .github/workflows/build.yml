@@ -28,6 +28,9 @@ jobs:
       - name: Smoke test the engine
         shell: cmd
         run: .venv-win\Scripts\python -c "import bloom.converters, bloom.tools, bloom.platform_utils as pu; print('desktop:', pu.desktop_dir()); print('ffmpeg:', pu.ffmpeg_exe())"
+      - name: HEIC photos convert and the bundle ships libheif
+        shell: cmd
+        run: .venv-win\Scripts\python packaging\check_heic.py dist\Bloom
       - uses: actions/upload-artifact@v4
         with:
           name: Bloom-Windows
@@ -48,6 +51,8 @@ jobs:
           python-version: "3.12"
       - name: Build
         run: ./packaging/build_linux.sh
+      - name: HEIC photos convert and the bundle ships libheif
+        run: .venv/bin/python packaging/check_heic.py dist/Bloom
       - name: Install the .deb and launch Bloom
         run: |
           sudo apt-get update -qq
