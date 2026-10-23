@@ -43,7 +43,7 @@ one it was built on, so the GitHub Actions build (Ubuntu 22.04) is the one to sh
 ## Android app
 
 `android/` is a native Kotlin app (Android 10+). Share any file to Bloom from another app (or open Bloom and
-choose files) and a petal wheel offers Convert, Tools and Actions: images to JPG/PNG/WEBP/PDF, PDF pages to
+choose files) and a petal wheel offers Convert, Tools and Actions: images (including iPhone HEIC photos) to JPG/PNG/WEBP/PDF, PDF pages to
 images, PDF merge/split, video to MP4/M4A, 720p, mute, zip. Results go to Downloads/Bloom. It asks for no
 permissions and has no internet access.
 

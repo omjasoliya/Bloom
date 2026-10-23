@@ -7,6 +7,7 @@ from pathlib import Path
 from . import platform_utils as pu
 
 IMAGE = {"png", "jpg", "jpeg", "webp", "bmp", "gif", "tif", "tiff", "ico"}
+HEIF = {"heic", "heif", "hif"}          # iPhone photos
 VIDEO = {"mp4", "mkv", "mov", "webm", "avi", "m4v", "flv", "wmv"}
 AUDIO = {"mp3", "wav", "flac", "ogg", "m4a", "aac", "opus", "wma"}
 TEXT_DOC = {"doc", "docx", "odt", "rtf", "txt"}
@@ -16,6 +17,7 @@ OFFICE = {"text", "sheet", "slides"}
 
 FORMATS = {
     "image": ["png", "jpg", "webp", "pdf", "bmp", "tiff", "ico", "gif"],
+    "heif": ["png", "jpg"],
     "video": ["mp4", "webm", "gif", "mp3", "wav", "mkv"],
     "audio": ["mp3", "wav", "flac", "ogg", "m4a"],
     "text": ["pdf", "docx", "odt", "txt", "rtf"],
@@ -31,7 +33,7 @@ class MissingTool(RuntimeError):
 
 def category(path):
     ext = Path(path).suffix.lower().lstrip(".")
-    for name, exts in (("image", IMAGE), ("video", VIDEO), ("audio", AUDIO),
+    for name, exts in (("image", IMAGE), ("heif", HEIF), ("video", VIDEO), ("audio", AUDIO),
                        ("text", TEXT_DOC), ("sheet", SHEET), ("slides", SLIDES)):
         if ext in exts:
             return name
@@ -78,6 +80,13 @@ def _image(src, target, ext):
         im.save(target, fmt)
 
 
+def _heif(src, target, ext):
+    """HEIC/HEIF photos (iPhone, newer Android cameras): Pillow needs pillow-heif to read them."""
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+    _image(src, target, ext)
+
+
 def _ffmpeg(src, target, ext):
     args = [pu.ffmpeg_exe(), "-y", "-loglevel", "error", "-i", str(src)]
     if ext == "gif":
@@ -121,6 +130,8 @@ def convert(src, ext):
     target = unique_target(src, ext)
     if cat == "image":
         _image(src, target, ext)
+    elif cat == "heif":
+        _heif(src, target, ext)
     elif cat in ("video", "audio"):
         _ffmpeg(src, target, ext)
     elif cat == "pdf":

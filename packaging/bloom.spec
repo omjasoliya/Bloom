@@ -13,13 +13,14 @@ if IS_WINDOWS:                                                           # Linux
     datas += collect_data_files("imageio_ffmpeg", includes=["binaries/*"])   # bundled ffmpeg.exe
 datas += collect_data_files("pypdfium2_raw")                             # version.json etc.
 binaries = collect_dynamic_libs("pypdfium2_raw")                         # pdfium.dll
+binaries += collect_dynamic_libs("pillow_heif")                         # libheif, for HEIC photos
 
 a = Analysis(
     [os.path.join(ROOT, "run_bloom.py")],
     pathex=[ROOT],
     datas=datas,
     binaries=binaries,
-    hiddenimports=["PySide6.QtSvg", "PySide6.QtNetwork"],
+    hiddenimports=["PySide6.QtSvg", "PySide6.QtNetwork", "pillow_heif"],
     excludes=["tkinter", "PySide6.QtQml", "PySide6.QtQuick", "PySide6.QtWebEngineCore"],
 )
 if not IS_WINDOWS:

@@ -7,3 +7,4 @@ pypdf==6.21.1
 pypdfium2==5.14.0
 Pillow==13.0.0
 imageio-ffmpeg==0.6.0
+pillow-heif==1.8.1
