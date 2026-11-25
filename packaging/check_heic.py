@@ -20,7 +20,13 @@ with tempfile.TemporaryDirectory(prefix="bloom-heic-") as tmp:
         out = converters.convert(src, ext)[0]
         with Image.open(out) as im:
             assert im.format == fmt and im.size == (64, 48), (ext, im.format, im.size)
-print("HEIC -> PNG/JPG: ok")
+    avif = Path(tmp) / "photo.avif"
+    Image.new("RGB", (64, 48), "blue").save(avif)
+    for ext, fmt in (("png", "PNG"), ("jpg", "JPEG")):
+        out = converters.convert(avif, ext)[0]
+        with Image.open(out) as im:
+            assert im.format == fmt and im.size == (64, 48), ("avif", ext, im.format, im.size)
+print("HEIC and AVIF -> PNG/JPG: ok")
 
 if len(sys.argv) > 1:
     bundle = Path(sys.argv[1])

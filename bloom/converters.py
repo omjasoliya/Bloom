@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import platform_utils as pu
 
-IMAGE = {"png", "jpg", "jpeg", "webp", "bmp", "gif", "tif", "tiff", "ico"}
+IMAGE = {"png", "jpg", "jpeg", "webp", "avif", "bmp", "gif", "tif", "tiff", "ico"}
 HEIF = {"heic", "heif", "hif"}          # iPhone photos
 VIDEO = {"mp4", "mkv", "mov", "webm", "avi", "m4v", "flv", "wmv"}
 AUDIO = {"mp3", "wav", "flac", "ogg", "m4a", "aac", "opus", "wma"}

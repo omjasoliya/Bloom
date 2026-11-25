@@ -3,7 +3,8 @@
 The first line of each version is what Bloom shows when it offers the update (keep it under 140 characters).
 
 ## 0.3.3
-- HEIC photos: convert iPhone HEIC/HEIF photos to PNG or JPG on Windows and Linux (Android already could).
+- HEIC and AVIF photos: convert iPhone HEIC/HEIF and AVIF photos to PNG, JPG and more on Windows and Linux.
+- Fixed: AVIF images couldn't be converted on Windows and Linux.
 
 ## 0.3.2
 - Update notifications: Bloom tells you when a new version is out and updates in one tap. It asks first.
