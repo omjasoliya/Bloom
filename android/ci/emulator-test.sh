@@ -174,8 +174,14 @@ adb shell ls -la /sdcard/Download/Bloom/ | tee "$OUT/outputs.txt"
 # the offer to Android's installer (which then asks to allow installs from Bloom).
 adb shell am start -W -n "$PKG/.BloomActivity" --es io.github.omjasoliya.bloom.TEST_VERSION 0.1.0 > /dev/null
 shot 14-ask-updates
-tap "Yes, notify me"
-wait_for Update 60
+# The tap can land while the screen is still settling, so repeat it until the question is gone.
+for _ in 1 2 3 4 5; do
+  tap "Yes, notify me" || true
+  sleep 2
+  adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 || true
+  adb shell cat /sdcard/ui.xml 2>/dev/null | grep -q 'text="Yes, notify me"' || break
+done
+wait_for Update 90
 shot 15-update-offer
 tap Update
 for _ in $(seq 1 120); do
